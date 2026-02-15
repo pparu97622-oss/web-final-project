@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOGUE | Archive 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,800;1,400&family=Inter:wght@200;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="offer-banner">
+        <p>EXCLUSIVE: 20% OFF ALL SILK PIECES — USE CODE: <strong>VOGUE26</strong></p>
+    </div>
+
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="logo" onclick="showLanding()">VOGUE</div>
+            
+            <div class="nav-links">
+                <a href="javascript:void(0)" onclick="showDashboard('essentials')">Essentials</a>
+                <a href="javascript:void(0)" onclick="showDashboard('silk')">Silk</a>
+                <a href="javascript:void(0)" onclick="showDashboard('accessories')">Accessories</a>
+                <a href="javascript:void(0)" onclick="showDashboard('seasonal')">Seasonal</a>
+            </div>
+
+            <div class="nav-actions">
+                <span id="login-trigger" class="nav-text" onclick="toggleAuthModal()">SIGN IN</span>
+                
+                <span id="nav-user-link" class="nav-text hidden" onclick="openFullDashboard()">DASHBOARD</span>
+                <span id="nav-admin-link" class="nav-text hidden" onclick="openAdminBackstage()">ADMIN</span>
+                
+                <div class="cart-trigger" onclick="toggleCart()">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span id="cart-count">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="landing-page">
+        <section class="hero-luxury">
+            <div class="hero-content">
+                <p class="hero-tag">NEW COLLECTION 2026</p>
+                <h1 class="hero-title">Timeless <em>Elegance</em></h1>
+                <button class="btn-explore" onclick="showDashboard('essentials')">SHOP THE ARCHIVE</button>
+            </div>
+        </section>
+
+        <section class="landing-section">
+            <div class="section-header">
+                <span class="sub-title">CURATED SELECTION</span>
+                <h2 class="serif-title">Latest Arrivals</h2>
+            </div>
+            <div class="arrival-grid">
+                <div class="ad-card large" style="background-image: url('https://i.pinimg.com/736x/bd/4f/39/bd4f3913636c624e94fe0a55001a4432.jpg')">
+                    <div class="ad-overlay">
+                        <h3>The Spring Editorial</h3>
+                        <button class="btn-explore white" onclick="showDashboard('seasonal')">VIEW STORY</button>
+                    </div>
+                </div>
+                <div class="ad-card tall" style="background-image: url('https://i.pinimg.com/1200x/67/c1/a5/67c1a500f12921d3cb3db4ba6300c99d.jpg')">
+                    <div class="ad-overlay">
+                        <h3>Silk Essentials</h3>
+                        <p>Starting at $350</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="newsletter-block">
+            <div class="newsletter-content">
+                <h2 class="serif-title">The VOGUE Dispatch</h2>
+                <p>Join our inner circle for early access to the 2026 Archive and private invitations.</p>
+                <div class="newsletter-form">
+                    <input type="email" id="news-email" placeholder="ENTER YOUR EMAIL">
+                    <button onclick="subscribeNewsletter()">SUBSCRIBE</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <main id="main-app" class="hidden">
+        <div class="shop-container">
+            <header class="shop-header">
+                <h2 id="category-title">COLLECTION</h2>
+                <div class="category-filters">
+                    <button class="filter-btn active" onclick="loadProductsByGroup(currentActiveGroup, 'all')">View All</button>
+                    <button class="filter-btn" onclick="loadProductsByGroup(currentActiveGroup, 'women')">Women</button>
+                    <button class="filter-btn" onclick="loadProductsByGroup(currentActiveGroup, 'men')">Men</button>
+                </div>
+            </header>
+            <div id="product-grid" class="product-grid"></div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-col brand-info">
+                <h2 class="logo">VOGUE</h2>
+                <p>Establishing the global standard of fashion since 1892. Reimagined for the 2026 Archive.</p>
+            </div>
+            <div class="footer-col">
+                <h4>COLLECTIONS</h4>
+                <a href="javascript:void(0)" onclick="showDashboard('essentials')">Essentials</a>
+                <a href="javascript:void(0)" onclick="showDashboard('silk')">Silk</a>
+                <a href="javascript:void(0)" onclick="showDashboard('accessories')">Accessories</a>
+            </div>
+            <div class="footer-col">
+                <h4>ASSISTANCE</h4>
+                <a href="#">Shipping & Returns</a>
+                <a href="#">Boutique Finder</a>
+                <a href="#">Contact Us</a>
+            </div>
+            <div class="footer-col">
+                <h4>SOCIAL</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#"><i class="fa-brands fa-pinterest"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 VOGUE ARCHIVE. ALL RIGHTS RESERVED.</p>
+        </div>
+    </footer>
+
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content auth-box">
+            <span class="close-modal" onclick="toggleAuthModal()">&times;</span>
+            <div class="auth-tabs">
+                <button id="tab-login" class="auth-tab active" onclick="switchAuthTab('login')">LOGIN</button>
+                <button id="tab-register" class="auth-tab" onclick="switchAuthTab('register')">REGISTER</button>
+            </div>
+            <div id="login-form-container">
+                <h2 class="serif-title">Welcome Back</h2>
+                <div class="input-group">
+                    <input type="email" id="login-email" placeholder="EMAIL ADDRESS">
+                    <input type="password" id="login-password" placeholder="PASSWORD">
+                </div>
+                <button class="btn-black" onclick="handleEmailLogin()">SIGN IN</button>
+            </div>
+            <div id="register-form-container" class="hidden">
+                <h2 class="serif-title">Create Account</h2>
+                <div class="input-group">
+                    <input type="text" id="reg-name" placeholder="FULL NAME">
+                    <input type="email" id="reg-email" placeholder="EMAIL ADDRESS">
+                    <input type="password" id="reg-password" placeholder="CREATE PASSWORD">
+                </div>
+                <button class="btn-black" onclick="handleEmailRegister()">JOIN VOGUE</button>
+            </div>
+            <div class="auth-divider"><span>OR</span></div>
+            <button class="btn-google-luxury" onclick="handleGoogleSignIn()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+                CONTINUE WITH GOOGLE
+            </button>
+        </div>
+    </div>
+
+<div id="product-modal" class="modal hidden">
+    <div class="product-modal-content">
+        <div class="modal-image-side">
+            <img id="detail-img-src" src="" alt="Product">
+        </div>
+        <div class="modal-details-side">
+            <span class="close-modal" onclick="closeProductDetail()">&times;</span>
+            <h2 id="detail-name">Product Name</h2>
+            <p id="detail-price">$0.00</p>
+
+            <div class="opt-group">
+                <label>SELECT SIZE</label>
+                <select id="detail-size" class="luxury-select"></select>
+            </div>
+
+            <div class="opt-group">
+                <label>QUANTITY</label>
+                <div class="qty-controls">
+                    <button onclick="updateDetailQty(-1)">—</button>
+                    <span id="detail-qty">1</span>
+                    <button onclick="updateDetailQty(1)">+</button>
+                </div>
+            </div>
+
+            <button class="btn-black" onclick="addCurrentToBag()">ADD TO BAG</button>
+        </div>
+    </div>
+</div>
+
+    <div id="cart-drawer" class="cart-sidebar">
+        <div class="cart-side-header">
+            <h3>YOUR BAG</h3>
+            <span class="close-drawer" onclick="toggleCart()">&times;</span>
+        </div>
+        <div id="cart-items-list" class="cart-side-body"></div>
+        <div class="cart-side-footer">
+            <div class="cart-subtotal"><span>TOTAL</span><span id="cart-total">$0.00</span></div>
+            <button class="btn-black" onclick="processCheckout()">PROCEED TO CHECKOUT</button>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" class="hidden dashboard-page">
+        <div class="admin-header">
+            <h2>Management Console</h2>
+            <button class="btn-black" onclick="openAddModal()">+ ADD NEW PIECE</button>
+        </div>
+        <div class="inventory-scroll">
+            <table>
+                <thead>
+                    <tr><th>IMG</th><th>Item</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="inventory-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="user-dashboard" class="hidden dashboard-page">
+        <div class="user-welcome">
+            <h2>Welcome Back, <span id="user-name-display">Guest</span></h2>
+            <button class="btn-black" onclick="handleLogout()">LOGOUT</button>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content auth-box">
+            <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+            <h2 class="serif-title">New Entry</h2>
+            <div class="input-group">
+                <input type="text" id="admin-p-name" placeholder="NAME">
+                <input type="number" id="admin-p-price" placeholder="PRICE">
+                <input type="text" id="admin-p-img" placeholder="IMAGE URL">
+                <select id="admin-p-group" class="luxury-select">
+                    <option value="essentials">Essentials</option>
+                    <option value="silk">Silk</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="seasonal">Seasonal</option>
+                </select>
+            </div>
+            <button class="btn-black" onclick="saveProduct()">SAVE</button>
+        </div>
+    </div>
+
+    <div id="toast" class="luxury-toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="store.js"></script>
+</body>
+</html>
