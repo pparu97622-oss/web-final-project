@@ -21,7 +21,18 @@
     outline: none;
 }
 
+/* ==========================================
+   2. LAYOUT & STICKY FOOTER FIX
+   ========================================== */
+html, body {
+    height: 100%;
+}
+
 body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
     font-family: var(--sans);
     background-color: var(--white);
     color: var(--black);
@@ -29,10 +40,27 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+#landing-page, 
+#main-app, 
+#admin-dashboard, 
+#user-dashboard,
+.dashboard-page,
+.shop-container {
+    flex: 1 0 auto;
+}
+
+.main-footer {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 100px 4% 40px; 
+    background: var(--white); 
+    border-top: 1px solid #eee;
+}
+
 .hidden { display: none !important; }
 
 /* ==========================================
-   2. NAVIGATION
+   3. NAVIGATION
    ========================================== */
 .main-nav {
     background: var(--white);
@@ -79,7 +107,35 @@ body {
     letter-spacing: 1px;
 }
 
-.nav-text { cursor: pointer; text-transform: uppercase; font-weight: 600; }
+#nav-admin-link, 
+#nav-user-link,
+.nav-status-only {
+    pointer-events: none !important; 
+    cursor: default !important;
+    user-select: none !important;
+    opacity: 0.5;
+    color: var(--black) !important;
+    font-weight: 400;
+}
+
+#nav-dashboard-link {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    color: var(--black);
+    font-weight: 700;
+    transition: var(--transition);
+    border-bottom: 1px solid var(--black);
+    padding-bottom: 2px;
+    text-transform: uppercase;
+}
+
+#nav-dashboard-link:hover {
+    color: var(--grey-medium);
+    border-bottom-color: var(--grey-medium);
+}
+
+.nav-text { cursor: pointer; text-transform: uppercase; }
 
 .cart-trigger {
     position: relative;
@@ -103,7 +159,7 @@ body {
 }
 
 /* ==========================================
-   3. HERO SECTION
+   4. HERO SECTION
    ========================================== */
 .hero-luxury {
     height: 90vh;
@@ -135,7 +191,7 @@ body {
 .btn-explore:hover { background: var(--white); color: var(--black); }
 
 /* ==========================================
-   4. PRODUCT GRID
+   5. PRODUCT GRID
    ========================================== */
 .shop-container { padding: 80px 4%; max-width: 1600px; margin: 0 auto; }
 .shop-header { margin-bottom: 60px; text-align: center; }
@@ -154,13 +210,13 @@ body {
 .product-card:hover img { transform: scale(1.05); }
 
 /* ==========================================
-   5. DASHBOARDS (ADMIN & USER)
+   6. DASHBOARDS (ADMIN & USER)
    ========================================= */
 .dashboard-page { padding: 60px 4%; max-width: 1400px; margin: 0 auto; animation: fadeIn 0.8s ease; }
 
 .admin-grid, .user-features-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 30px;
     margin-top: 40px;
 }
@@ -184,7 +240,7 @@ td { padding: 15px; border-bottom: 1px solid #eee; }
 td img { width: 40px; height: 50px; object-fit: cover; }
 
 /* ==========================================
-   6. RECTANGLE CART STYLING
+   7. RECTANGLE CART STYLING
    ========================================== */
 .cart-item-row {
     display: flex;
@@ -219,7 +275,7 @@ td img { width: 40px; height: 50px; object-fit: cover; }
 .remove-btn:hover { color: #000; }
 
 /* ==========================================
-   7. MODALS & SIDEBARS
+   8. MODALS & SIDEBARS
    ========================================== */
 .modal {
     position: fixed;
@@ -240,7 +296,7 @@ td img { width: 40px; height: 50px; object-fit: cover; }
 .cart-sidebar.active { right: 0; }
 
 /* ==========================================
-   8. BUTTONS & INPUTS
+   9. BUTTONS & INPUTS
    ========================================== */
 .btn-black {
     background: var(--black);
@@ -254,7 +310,10 @@ td img { width: 40px; height: 50px; object-fit: cover; }
     width: 100%;
     margin-top: 20px;
     height: 55px;
+    transition: var(--transition);
 }
+
+.btn-black:hover { opacity: 0.8; }
 
 .btn-ghost-dark {
     background: transparent; border: 1px solid #000;
@@ -263,14 +322,15 @@ td img { width: 40px; height: 50px; object-fit: cover; }
 }
 
 /* ==========================================
-   9. TOAST & ANIMATIONS
+   10. TOAST & ANIMATIONS
    ========================================== */
-.luxury-toast {
+#toast.luxury-toast {
     position: fixed; bottom: 30px; right: 30px; background: var(--black);
     color: white; padding: 16px 30px; font-size: 11px; letter-spacing: 2px;
     z-index: 4000; transform: translateY(150%); transition: 0.5s;
+    text-transform: uppercase;
 }
-.luxury-toast.show { transform: translateY(0); }
+#toast.luxury-toast.show { transform: translateY(0); }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -278,44 +338,41 @@ td img { width: 40px; height: 50px; object-fit: cover; }
 }
 
 /* ==========================================
-   PRODUCT DETAIL MODAL - COMPACT LUXURY VERSION
-========================================== */
-
+   11. PRODUCT DETAIL MODAL
+   ========================================== */
 .product-modal-content {
     background: var(--white);
-    width: 85%;
-    max-width: 750px;      /* smaller width */
-    max-height: 80vh;
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
     display: flex;
-    gap: 30px;
-    padding: 35px;
+    gap: 40px;
+    padding: 40px;
     animation: fadeIn 0.3s ease;
-    overflow: hidden;
+    overflow-y: auto;
+    position: relative;
     box-shadow: 0 20px 50px rgba(0,0,0,0.12);
 }
 
-.modal-image-side {
-    flex: 1;
+.modal-image-side { flex: 1.2; display: flex; align-items: center; justify-content: center; }
+.modal-image-side img { width: 100%; height: auto; object-fit: cover; }
+.modal-details-side { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+.qty-control {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+    border: 1px solid #eee;
+    width: fit-content;
+    padding: 10px 20px;
 }
 
-.modal-image-side img {
-    max-width: 100%;
-    max-height: 60vh;   /* 👈 THIS MAKES IT SMALLER */
-    object-fit: contain;
-}
-
-.modal-details-side {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
+.qty-control span { font-size: 14px; width: 30px; text-align: center; }
+.qty-btn { cursor: pointer; background: none; border: none; font-size: 18px; }
 
 /* ==========================================
-   11. AUTH MODAL & FORM STYLING
+   12. AUTH MODAL & FORM STYLING
    ========================================== */
 .auth-box {
     width: 100%;
@@ -323,201 +380,109 @@ td img { width: 40px; height: 50px; object-fit: cover; }
     padding: 60px 40px;
     text-align: center;
     background: #fff;
-    border: 1px solid #eee;
+    border: none;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+    position: relative;
 }
 
-.auth-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 40px;
-}
-
-.auth-tab {
+.close-modal {
+    position: absolute;
+    top: 25px;
+    right: 25px;
     background: none;
     border: none;
-    padding-bottom: 8px;
-    font-size: 12px;
-    letter-spacing: 2px;
+    font-size: 20px;
     cursor: pointer;
     color: var(--grey-medium);
-    text-transform: uppercase;
-    border-bottom: 1px solid transparent;
+}
+
+.auth-tabs { display: flex; justify-content: center; gap: 30px; margin-bottom: 40px; }
+.auth-tabs button {
+    background: none; border: none; padding-bottom: 8px; font-size: 12px;
+    letter-spacing: 2px; cursor: pointer; color: var(--grey-medium);
+    text-transform: uppercase; border-bottom: 2px solid transparent; transition: var(--transition);
+}
+.auth-tabs button.active { color: var(--black); border-bottom: 2px solid var(--black); font-weight: 700; }
+
+/* Form Layout Fixes */
+#login-form-container, #register-form-container { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    margin-bottom: 25px; 
+    width: 100%; 
+}
+
+.auth-box input {
+    width: 100%; 
+    display: block; 
+    padding: 18px; 
+    border: 1px solid #eeeeee;
+    font-family: var(--sans); 
+    font-size: 12px; 
+    letter-spacing: 1px; 
+    border-radius: 0;
+    background: var(--grey-light);
     transition: var(--transition);
 }
 
-.auth-tab.active {
-    color: var(--black);
-    border-bottom: 1px solid var(--black);
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.input-group input, 
-.modal-details-side select, 
-.modal-details-side input {
-    width: 100%;
-    padding: 15px;
-    border: 1px solid #eee;
-    font-family: var(--sans);
-    font-size: 12px;
-    letter-spacing: 1px;
-    border-radius: 0;
-}
-
-.input-group input:focus {
+.auth-box input:focus {
+    background: white;
     border-color: var(--black);
 }
 
-.btn-google-luxury {
-    width: 100%;
-    background: white;
-    border: 1px solid #eee;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    cursor: pointer;
-    font-size: 11px;
-    letter-spacing: 1px;
-    margin-top: 15px;
-    text-transform: uppercase;
+.btn-google {
+    width: 100%; background: white; border: 1px solid #000; padding: 15px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    cursor: pointer; font-size: 11px; letter-spacing: 1px; margin-top: 15px; text-transform: uppercase;
+    transition: var(--transition);
 }
-
-.btn-google-luxury img {
-    width: 18px !important; /* Forces the Google icon to stay small */
-    height: 18px !important;
-    object-fit: contain;
-}
-
-.auth-divider {
-    margin: 25px 0;
-    position: relative;
-    text-align: center;
-}
-
-.auth-divider::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: #eee;
-}
-
-.auth-divider span {
-    background: #fff;
-    padding: 0 15px;
-    font-size: 10px;
-    color: var(--grey-medium);
-    position: relative;
-}
+.btn-google:hover { background: #f9f9f9; }
 
 /* ==========================================
-   12. CART SIDEBAR LAYOUT
+   13. CART SIDEBAR LAYOUT
    ========================================== */
-.cart-side-header {
-    padding: 30px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.cart-side-header h3 { font-family: var(--serif); letter-spacing: 2px; }
-
-.cart-side-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 30px;
-}
-
-.cart-side-footer {
-    padding: 30px;
-    border-top: 1px solid #eee;
-    background: #fff;
-}
-
-.cart-subtotal {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    font-weight: 600;
-    font-size: 14px;
-}
+.cart-header { padding: 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.cart-header h3 { font-family: var(--serif); letter-spacing: 2px; text-transform: uppercase; }
+.cart-body { flex: 1; overflow-y: auto; padding: 0 30px; }
+.cart-footer { padding: 30px; border-top: 1px solid #eee; background: #fff; }
+.total-row { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 14px; letter-spacing: 1px; }
 
 /* ==========================================
-   13. LANDING & BANNER
+   14. LANDING & BANNER
    ========================================== */
 .offer-banner {
-    background: var(--black);
-    color: var(--white);
-    text-align: center;
-    padding: 15px 0;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    background: var(--black); color: var(--white); text-align: center;
+    padding: 15px 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
 }
-
-.arrival-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 30px;
-    height: 700px;
-    padding: 100px 4%;
-}
-
+.arrival-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; height: 700px; padding: 100px 4%; }
 .ad-card {
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    padding: 60px;
-    color: var(--white);
-    overflow: hidden;
+    background-size: cover; background-position: center; position: relative;
+    display: flex; align-items: flex-end; padding: 60px; color: var(--white); overflow: hidden;
 }
+.ad-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent); }
 
-.ad-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
-}
+.ad-card h2 { font-family: var(--serif); font-size: 42px; position: relative; z-index: 1; letter-spacing: 2px; }
 
 /* ==========================================
-   14. NEWSLETTER & FOOTER
+   15. NEWSLETTER
    ========================================== */
-.newsletter-block {
-    background: var(--grey-light);
-    padding: 120px 4%;
-    text-align: center;
-}
-
-.newsletter-form {
-    display: flex;
-    border-bottom: 1px solid var(--black);
-    max-width: 500px;
-    margin: 40px auto 0;
-}
-
-.newsletter-form input { flex: 1; border: none; background: transparent; padding: 15px; }
-.newsletter-form button { background: none; border: none; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; }
-
-.main-footer { padding: 100px 4% 40px; background: var(--white); border-top: 1px solid #eee; }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; }
-.footer-col h4 { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px; }
-.footer-col a { display: block; font-size: 12px; color: var(--grey-medium); margin-bottom: 15px; }
+.newsletter-block { background: var(--grey-light); padding: 120px 4%; text-align: center; }
+.newsletter-block h3 { font-family: var(--serif); font-size: 32px; letter-spacing: 2px; margin-bottom: 10px; }
+.newsletter-form { display: flex; border-bottom: 1px solid var(--black); max-width: 500px; margin: 40px auto 0; }
+.newsletter-form input { flex: 1; border: none; background: transparent; padding: 15px; font-size: 12px; letter-spacing: 1px; }
+.newsletter-form button { background: none; border: none; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-weight: 700; }
 
 /* ==========================================
-   15. RESPONSIVE SYSTEM
+   16. FOOTER GRID
+   ========================================== */
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; }
+.footer-col h4 { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px; color: var(--black); }
+.footer-col a { display: block; font-size: 12px; color: var(--grey-medium); margin-bottom: 15px; transition: 0.3s; }
+.footer-col a:hover { color: var(--black); padding-left: 5px; }
+
+/* ==========================================
+   17. RESPONSIVE SYSTEM
    ========================================== */
 @media (max-width: 1024px) {
     .nav-links { display: none; }
@@ -526,15 +491,12 @@ td img { width: 40px; height: 50px; object-fit: cover; }
 }
 
 @media (max-width: 768px) {
-    .product-modal-content {
-        flex-direction: column;
-        height: auto;
-        max-height: 90vh;
-    }
-    .modal-image-side { height: 250px; flex: none; }
-    .modal-details-side { padding: 30px; flex: none; }
+    .product-modal-content { flex-direction: column; width: 90%; max-height: 85vh; padding: 25px; }
+    .modal-image-side { height: 300px; flex: none; }
+    .modal-details-side { padding: 0; flex: none; }
     .arrival-grid { grid-template-columns: 1fr; height: auto; }
     .product-grid { grid-template-columns: repeat(2, 1fr); }
+    .cart-sidebar { width: 100%; right: -100%; }
 }
 
 @media (max-width: 480px) {
@@ -543,3 +505,48 @@ td img { width: 40px; height: 50px; object-fit: cover; }
     .auth-box { padding: 40px 20px; }
     .logo { font-size: 24px; letter-spacing: 6px; }
 }
+
+/* ==========================================
+   18. NEW: PROFESSIONAL ADMIN LAYOUT
+   ========================================== */
+.admin-wrapper {
+    display: flex;
+    min-height: calc(100vh - 80px);
+}
+
+.admin-sidebar {
+    width: 280px;
+    background: #0d0d0d;
+    color: white;
+    padding: 40px 0;
+}
+
+.admin-label { padding: 0 30px; color: #555; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; display: block; }
+#admin-name-tag { padding: 0 30px 40px; font-family: var(--serif); font-size: 24px; border-bottom: 1px solid #222; margin-bottom: 30px; word-break: break-all; }
+
+.admin-nav-menu button {
+    width: 100%; padding: 18px 30px; background: none; border: none;
+    color: #888; text-align: left; cursor: pointer; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; transition: 0.3s;
+    display: flex; align-items: center; gap: 15px;
+}
+.admin-nav-menu button:hover, .admin-nav-menu button.active {
+    background: #151515; color: #fff; border-left: 3px solid var(--gold);
+}
+
+.admin-main { flex: 1; padding: 50px 5%; background: #fdfdfd; overflow-x: auto; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; flex-wrap: wrap; gap: 20px; }
+.admin-header h1 { font-family: var(--serif); font-size: 36px; margin-bottom: 5px; }
+
+/* ==========================================
+   19. NEW: LUXURY TABLE UI
+   ========================================== */
+.luxury-table { width: 100%; border-collapse: separate; border-spacing: 0 15px; min-width: 600px; }
+.luxury-table th {
+    padding: 15px 20px; color: #999; font-size: 10px; 
+    letter-spacing: 2px; text-transform: uppercase; text-align: left;
+}
+.luxury-table tbody tr { transition: transform 0.3s; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+.luxury-table td { padding: 20px; background: white; border: none; vertical-align: middle; }
+.luxury-table td:first-child { border-radius: 4px 0 0 4px; }
+.luxury-table td:last-child { border-radius: 0 4px 4px 0; }

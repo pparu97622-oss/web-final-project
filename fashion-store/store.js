@@ -13,19 +13,22 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 let cart = JSON.parse(localStorage.getItem('vogue_cart')) || [];
+let wishlist = JSON.parse(localStorage.getItem('vogue_wishlist')) || [];
 let selectedProduct = null;
 let currentDetailQty = 1;
-let currentActiveGroup = 'essentials'; 
+let currentActiveGroup = 'essentials';
 let editingProductId = null;
 
-// NEW ADMIN EMAIL
 const ADMIN_EMAIL = "pparu97622@gmail.com";
+const API_URL = "http://localhost:5000/api/products";
 
 /* ==========================================
-   2. THE PRODUCT DATABASE (48 ITEMS)
+   2. THE PRODUCT DATABASE
    ========================================== */
 const PRODUCTS = {
     essentials: [
@@ -54,7 +57,7 @@ const PRODUCTS = {
         { id: 's9', name: 'Emerald Slip', price: 1100, cat: 'women', stock: 5, img: 'https://i.pinimg.com/1200x/3a/e0/08/3ae0085360d7e2b5d0e5bad8751e9f2a.jpg' },
         { id: 's10', name: 'Silk Tie', price: 195, cat: 'men', stock: 50, img: 'https://i.pinimg.com/1200x/99/1f/55/991f55681c3194b929f7bc2966dde323.jpg' },
         { id: 's11', name: 'Floral Silk Gown', price: 3200, cat: 'women', stock: 2, img: 'https://i.pinimg.com/736x/14/8f/58/148f58129721ca790022b51182887c22.jpg' },
-        { id: 's12', name: 'Raw Silk Vest', price: 450, cat: 'men', stock: 10, img:'https://i.pinimg.com/736x/1a/79/29/1a7929efd8eee7eddcdf42185142f0bc.jpg' }
+        { id: 's12', name: 'Raw Silk Vest', price: 450, cat: 'men', stock: 10, img: 'https://i.pinimg.com/736x/1a/79/29/1a7929efd8eee7eddcdf42185142f0bc.jpg' }
     ],
     accessories: [
         { id: 'a1', name: 'Gold Bracelet', price: 4200, cat: 'women', stock: 2, img: 'https://i.pinimg.com/736x/fb/ba/29/fbba29a9ccfe1ede55d40e3845de7915.jpg' },
@@ -66,7 +69,7 @@ const PRODUCTS = {
         { id: 'a7', name: 'Clutch Bag', price: 1600, cat: 'women', stock: 4, img: 'https://i.pinimg.com/736x/9c/1a/a2/9c1aa27c96395b643d23376f92f538a7.jpg' },
         { id: 'a8', name: 'Silk Pocket Square', price: 85, cat: 'men', stock: 40, img: 'https://i.pinimg.com/736x/79/a3/01/79a301e0eb2cf1c02bc0872e1b46e8e8.jpg' },
         { id: 'a9', name: 'Diamond Studs', price: 8500, cat: 'women', stock: 1, img: 'https://i.pinimg.com/736x/33/eb/07/33eb078715e81812f2beaa7c9e0d304e.jpg' },
-        { id: 'a10', name: 'Cufflinks', price: 450, cat: 'men', stock: 15, img: 'https://i.pinimg.com/736x/3e/f4/f1/3ef4f1bf833ffa5c485cc221d53e4a87.jpg' },
+        { id: 'a10', name: 'Cufflinks', price: 450, cat: 'men', stock: 15, img: 'https://i.pinimg.com/736x/3ef4f1bf833ffa5c485cc221d53e4a87.jpg' },
         { id: 'a11', name: 'Straw Hat', price: 290, cat: 'unisex', stock: 25, img: 'https://i.pinimg.com/1200x/cb/00/4f/cb004f031b30e140bb81b2878ca4dd89.jpg' },
         { id: 'a12', name: 'Leather Gloves', price: 350, cat: 'unisex', stock: 12, img: 'https://i.pinimg.com/736x/c4/39/d0/c439d08f5949df53204add268340f6c7.jpg' }
     ],
@@ -96,7 +99,7 @@ function showLanding() {
     document.getElementById('main-app').classList.add('hidden');
     document.getElementById('admin-dashboard').classList.add('hidden');
     document.getElementById('user-dashboard').classList.add('hidden');
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
 function showDashboard(group) {
@@ -105,88 +108,188 @@ function showDashboard(group) {
     document.getElementById('admin-dashboard').classList.add('hidden');
     document.getElementById('user-dashboard').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
+    
     document.getElementById('category-title').innerText = group.toUpperCase();
     loadProductsByGroup(group);
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
 function openFullDashboard() {
     document.getElementById('landing-page').classList.add('hidden');
     document.getElementById('main-app').classList.add('hidden');
-    document.getElementById('admin-dashboard').classList.add('hidden');
-    document.getElementById('user-dashboard').classList.remove('hidden');
-}
 
-function openAdminBackstage() {
-    document.getElementById('landing-page').classList.add('hidden');
-    document.getElementById('main-app').classList.add('hidden');
-    document.getElementById('user-dashboard').classList.add('hidden');
-    document.getElementById('admin-dashboard').classList.remove('hidden');
-    syncAdminInventory();
+    if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
+        document.getElementById('user-dashboard').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        syncAdminInventory();
+    } else if (auth.currentUser) {
+        document.getElementById('admin-dashboard').classList.add('hidden');
+        document.getElementById('user-dashboard').classList.remove('hidden');
+        switchUserTab('orders'); // Load default user tab
+    } else {
+        toggleAuthModal();
+    }
 }
 
 async function loadProductsByGroup(group, filter = 'all') {
     const grid = document.getElementById('product-grid');
+    if (!grid) return;
+
+    // Update Filter UI
+    const filters = document.querySelectorAll('.filter-btn');
+    filters.forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.innerText.toLowerCase() === filter) btn.classList.add('active');
+    });
+
     grid.innerHTML = '<p class="loading-text">REFINING COLLECTION...</p>';
-
-    let firebaseItems = [];
-    try {
-        const snapshot = await db.collection("products").where("group", "==", group).get();
-        snapshot.forEach(doc => firebaseItems.push({ ...doc.data(), id: doc.id }));
-    } catch (e) { console.error("Firebase fetch failed", e); }
-
-    let list = [...(PRODUCTS[group] || []), ...firebaseItems];
+    let list = PRODUCTS[group] ? [...PRODUCTS[group]] : [];
     if (filter !== 'all') list = list.filter(p => p.cat === filter);
 
-    grid.innerHTML = list.map(p => `
-        <div class="product-card" onclick="openProductDetail('${p.id}')">
-            <div class="img-wrapper">
-                <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x500'">
+    if (list.length === 0) {
+        grid.innerHTML = '<p class="empty-msg">NO ITEMS FOUND IN THIS CATEGORY.</p>';
+    } else {
+        grid.innerHTML = list.map(p => `
+            <div class="product-card" onclick="openProductDetail('${p.id}')">
+                <div class="img-wrapper">
+                    <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x500'">
+                </div>
+                <h4>${p.name}</h4>
+                <p>$${p.price.toLocaleString()}</p>
             </div>
-            <h4>${p.name}</h4>
-            <p>$${p.price.toLocaleString()}</p>
-        </div>
-    `).join('');
+        `).join('');
+    }
 }
 
 /* ==========================================
-   4. PRODUCT MODAL
+   4. USER DASHBOARD FUNCTIONALITY (NEW)
+   ========================================== */
+function switchUserTab(tab) {
+    const content = document.getElementById('user-tab-content');
+    const title = document.getElementById('user-tab-title');
+    const btns = document.querySelectorAll('.user-tab-btn');
+    
+    btns.forEach(b => b.classList.remove('active'));
+    event?.currentTarget?.classList?.add('active');
+
+    content.innerHTML = '<p class="loading-text">LOADING...</p>';
+
+    switch(tab) {
+        case 'orders':
+            title.innerText = "Order History";
+            content.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-box-open" style="font-size: 30px; margin-bottom: 15px;"></i>
+                    <p>YOU HAVE NO COMPLETED ORDERS YET.</p>
+                    <button class="btn-black" style="width: auto; padding: 10px 20px; margin-top: 15px;" onclick="showDashboard('essentials')">SHOP NOW</button>
+                </div>`;
+            break;
+        case 'wishlist':
+            title.innerText = "My Wishlist";
+            renderWishlist(content);
+            break;
+        case 'details':
+            title.innerText = "Account Settings";
+            const user = auth.currentUser;
+            content.innerHTML = `
+                <div class="settings-form" style="max-width: 400px; text-align: left;">
+                    <label style="font-size: 10px; letter-spacing: 1px;">FULL NAME</label>
+                    <input type="text" id="upd-name" value="${user.displayName || ''}" style="width:100%; padding:10px; margin: 10px 0 20px; border: 1px solid #eee;">
+                    <label style="font-size: 10px; letter-spacing: 1px;">EMAIL</label>
+                    <input type="text" value="${user.email}" disabled style="width:100%; padding:10px; margin: 10px 0 20px; border: 1px solid #f9f9f9; color: #999;">
+                    <button class="btn-black" onclick="updateUserProfile()">SAVE CHANGES</button>
+                </div>`;
+            break;
+        case 'feedback':
+            title.innerText = "Support & Feedback";
+            content.innerHTML = `
+                <div class="settings-form" style="max-width: 500px; text-align: left;">
+                    <p style="margin-bottom: 20px; font-size: 13px;">How can we assist you with the 2026 Archive?</p>
+                    <textarea id="fb-msg" placeholder="Describe your issue..." style="width:100%; height: 120px; padding:15px; border:1px solid #eee; font-family:inherit;"></textarea>
+                    <button class="btn-black" style="margin-top: 15px;" onclick="sendFeedback()">SUBMIT MESSAGE</button>
+                </div>`;
+            break;
+    }
+}
+
+function renderWishlist(container) {
+    if (wishlist.length === 0) {
+        container.innerHTML = `<p class="empty-msg">YOUR WISHLIST IS EMPTY.</p>`;
+    } else {
+        container.innerHTML = `<div class="wishlist-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            ${wishlist.map(item => `
+                <div class="cart-item-row" style="border: 1px solid #eee; padding: 10px;">
+                    <img src="${item.img}" class="cart-thumb" style="width: 60px;">
+                    <div class="cart-item-details">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-price">$${item.price}</span>
+                    </div>
+                    <button class="remove-btn" onclick="toggleWishlist('${item.id}')">✕</button>
+                </div>
+            `).join('')}
+        </div>`;
+    }
+}
+
+async function updateUserProfile() {
+    const newName = document.getElementById('upd-name').value;
+    try {
+        await auth.currentUser.updateProfile({ displayName: newName });
+        document.getElementById('user-name-display').innerText = newName;
+        showToast("PROFILE UPDATED");
+    } catch(e) { showToast("UPDATE ERROR"); }
+}
+
+function sendFeedback() {
+    const msg = document.getElementById('fb-msg').value;
+    if(!msg) return;
+    showToast("MESSAGE SENT TO CONCIERGE");
+    document.getElementById('fb-msg').value = "";
+}
+
+/* ==========================================
+   5. PRODUCT MODAL & WISHLIST LOGIC
    ========================================== */
 async function openProductDetail(id) {
     selectedProduct = getFlatProducts().find(p => p.id === id);
-    if (!selectedProduct) {
-        const doc = await db.collection("products").doc(id).get();
-        if(doc.exists) selectedProduct = doc.data();
-    }
     if (!selectedProduct) return;
 
     currentDetailQty = 1;
     document.getElementById('detail-name').innerText = selectedProduct.name;
     document.getElementById('detail-price').innerText = `$${selectedProduct.price.toLocaleString()}`;
     document.getElementById('detail-img-src').src = selectedProduct.img;
-    document.getElementById('detail-qty').innerText = currentDetailQty;
-    
+
     const sizes = ['XS', 'S', 'M', 'L', 'XL'];
     document.getElementById('detail-size').innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
     document.getElementById('product-modal').classList.remove('hidden');
 }
 
-function closeProductDetail() { document.getElementById('product-modal').classList.add('hidden'); }
-function updateDetailQty(change) {
-    currentDetailQty = Math.max(1, currentDetailQty + change);
-    document.getElementById('detail-qty').innerText = currentDetailQty;
+function toggleWishlist(id) {
+    const prod = getFlatProducts().find(p => p.id === id);
+    const index = wishlist.findIndex(p => p.id === id);
+    if(index > -1) {
+        wishlist.splice(index, 1);
+        showToast("REMOVED FROM WISHLIST");
+    } else {
+        wishlist.push(prod);
+        showToast("ADDED TO WISHLIST");
+    }
+    localStorage.setItem('vogue_wishlist', JSON.stringify(wishlist));
+    if(document.getElementById('user-dashboard').offsetParent) switchUserTab('wishlist');
 }
 
+function closeProductDetail() { document.getElementById('product-modal').classList.add('hidden'); }
+
 /* ==========================================
-   5. CART SYSTEM
+   6. CART SYSTEM
    ========================================== */
 function addCurrentToBag() {
     if (!auth.currentUser) { toggleAuthModal(); return; }
     const size = document.getElementById('detail-size').value;
     const existing = cart.find(item => item.id === selectedProduct.id && item.size === size);
-    
-    if (existing) existing.qty += currentDetailQty;
-    else cart.push({ ...selectedProduct, qty: currentDetailQty, size: size });
+
+    if (existing) existing.qty += 1;
+    else cart.push({ ...selectedProduct, qty: 1, size: size });
 
     updateCartUI();
     closeProductDetail();
@@ -196,13 +299,15 @@ function addCurrentToBag() {
 function updateCartUI() {
     localStorage.setItem('vogue_cart', JSON.stringify(cart));
     const count = cart.reduce((total, item) => total + item.qty, 0);
-    document.getElementById('cart-count').innerText = count;
+    const countEl = document.getElementById('cart-count');
+    if (countEl) countEl.innerText = count;
     renderCartDrawer();
 }
 
 function renderCartDrawer() {
     const list = document.getElementById('cart-items-list');
     let total = 0;
+    if (!list) return;
     if (cart.length === 0) {
         list.innerHTML = '<p class="empty-cart-msg">YOUR BAG IS CURRENTLY EMPTY.</p>';
     } else {
@@ -220,15 +325,32 @@ function renderCartDrawer() {
                 </div>`;
         }).join('');
     }
-    document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
+    const totalEl = document.getElementById('cart-total');
+    if (totalEl) totalEl.innerText = `$${total.toLocaleString()}`;
 }
 
 function removeFromCart(index) { cart.splice(index, 1); updateCartUI(); }
 function toggleCart() { document.getElementById('cart-drawer').classList.toggle('active'); }
 
 /* ==========================================
-   6. ADMIN BACKEND
+   7. ADMIN BACKEND (UPGRADED)
    ========================================== */
+function switchAdminTab(tab) {
+    const body = document.getElementById('inventory-body');
+    const header = document.querySelector('.admin-header h1');
+    
+    if(tab === 'sales') {
+        header.innerText = "Sales Analytics";
+        body.innerHTML = '<tr><td colspan="4" style="padding:40px;">NO SALES DATA RECORDED FOR FEB 2026</td></tr>';
+    } else if (tab === 'users') {
+        header.innerText = "User Database";
+        body.innerHTML = '<tr><td colspan="4" style="padding:40px;">LOADING USER RECORDS...</td></tr>';
+    } else {
+        header.innerText = "Inventory Console";
+        syncAdminInventory();
+    }
+}
+
 function openAddModal() {
     editingProductId = null;
     document.getElementById('admin-modal').classList.remove('hidden');
@@ -238,47 +360,46 @@ function closeAdminModal() { document.getElementById('admin-modal').classList.ad
 
 async function saveProduct() {
     const name = document.getElementById('admin-p-name').value;
-    const price = parseInt(document.getElementById('admin-p-price').value);
+    const price = parseFloat(document.getElementById('admin-p-price').value);
     const img = document.getElementById('admin-p-img').value;
     const group = document.getElementById('admin-p-group').value;
 
     if (!name || !price || !img) { alert("Missing fields"); return; }
-    const id = editingProductId || 'v-' + Date.now();
+    const productData = { name, price, image: img, category: group, stock: 10, desc: "New Arrival" };
 
     try {
-        await db.collection("products").doc(id).set({ id, name, price, img, group, cat: 'unisex', stock: 10 });
-        showToast("COLLECTION UPDATED");
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        });
+        showToast("SAVED TO COLLECTION");
         closeAdminModal();
-        loadProductsByGroup(group);
         syncAdminInventory();
-    } catch (e) { showToast("SAVE ERROR"); }
+    } catch (e) { showToast("DATABASE ERROR"); }
 }
 
 async function syncAdminInventory() {
     const body = document.getElementById('inventory-body');
-    if(!body) return;
-    const snapshot = await db.collection("products").get();
-    body.innerHTML = snapshot.docs.map(doc => {
-        const p = doc.data();
-        return `<tr>
-            <td><img src="${p.img}" width="30"></td>
-            <td>${p.name}</td>
-            <td>$${p.price}</td>
-            <td>${p.stock}</td>
-            <td><button onclick="adminDeleteProduct('${doc.id}')">✕</button></td>
-        </tr>`;
-    }).join('');
-}
-
-async function adminDeleteProduct(id) {
-    if(confirm("Remove?")) { await db.collection("products").doc(id).delete(); syncAdminInventory(); }
+    if (!body) return;
+    try {
+        const response = await fetch(API_URL);
+        const products = await response.json();
+        body.innerHTML = products.map(p => `
+            <tr>
+                <td><img src="${p.image}" width="30"></td>
+                <td>${p.name}</td>
+                <td>$${p.price}</td>
+                <td style="text-align:right;"><button class="remove-btn" onclick="adminDeleteProduct(${p.id})">✕</button></td>
+            </tr>`).join('');
+    } catch (e) { 
+        body.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">OFFLINE MODE: DB NOT CONNECTED</td></tr>';
+    }
 }
 
 /* ==========================================
-    7. AUTH & STARTUP (UPDATED)
+   8. AUTH & STARTUP
    ========================================== */
-
-// 1. Switch between Login and Register tabs in the modal
 function switchAuthTab(tab) {
     const loginForm = document.getElementById('login-form-container');
     const regForm = document.getElementById('register-form-container');
@@ -298,89 +419,68 @@ function switchAuthTab(tab) {
     }
 }
 
-// 2. Handle Email/Password Registration
 async function handleEmailRegister() {
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
     const name = document.getElementById('reg-name').value;
-
-    if (!email || !password || !name) {
-        showToast("PLEASE FILL ALL FIELDS");
-        return;
-    }
-
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        // Set the user's name
         await userCredential.user.updateProfile({ displayName: name });
         toggleAuthModal();
         showToast(`WELCOME, ${name.toUpperCase()}`);
-    } catch (e) {
-        alert(e.error || e.message);
-    }
+    } catch (e) { alert(e.message); }
 }
 
-// 3. Handle Email/Password Login
 async function handleEmailLogin() {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-
     try {
         await auth.signInWithEmailAndPassword(email, password);
         toggleAuthModal();
-        showToast("SUCCESSFULLY SIGNED IN");
-    } catch (e) {
-        alert("INVALID EMAIL OR PASSWORD");
-    }
+        showToast("SIGNED IN");
+    } catch (e) { alert("LOGIN FAILED"); }
 }
 
-// 4. Google Sign-In (Existing)
 async function handleGoogleSignIn() {
     try {
         await auth.signInWithPopup(googleProvider);
         toggleAuthModal();
         showToast("SIGNED IN WITH GOOGLE");
-    } catch (e) {
-        alert(e.message);
-    }
+    } catch (e) { alert(e.message); }
 }
 
-// 5. Logout Function
 async function handleLogout() {
-    try {
-        await auth.signOut();
-        showToast("SIGNED OUT");
-        setTimeout(() => location.reload(), 1000); // Reload to clear session
-    } catch (e) {
-        console.error("Logout Error", e);
-    }
+    await auth.signOut();
+    localStorage.removeItem('vogue_cart');
+    showToast("SIGNED OUT");
+    setTimeout(() => location.reload(), 1000);
 }
 
-function toggleAuthModal() { 
-    document.getElementById('auth-modal').classList.toggle('hidden'); 
-}
+function toggleAuthModal() { document.getElementById('auth-modal').classList.toggle('hidden'); }
 
-// 6. Auth State Listener (Modified to handle Email & Google)
 auth.onAuthStateChanged(user => {
-    const adminL = document.getElementById('nav-admin-link');
-    const userL = document.getElementById('nav-user-link');
+    const dashL = document.getElementById('nav-dashboard-link'); 
     const loginT = document.getElementById('login-trigger');
+    const nameDisp = document.getElementById('user-name-display');
+    const adminTag = document.getElementById('nav-admin-link');
+    const userTag = document.getElementById('nav-user-link');
 
     if (user) {
-        if(userL) userL.classList.remove('hidden');
         if(loginT) loginT.classList.add('hidden');
-        
-        // Display user name (fallback to email if name is missing)
-        const nameDisplay = user.displayName || user.email.split('@')[0];
-        document.getElementById('user-name-display').innerText = nameDisplay;
+        if(dashL) dashL.classList.remove('hidden');
         
         if (user.email === ADMIN_EMAIL) {
-            if(adminL) adminL.classList.remove('hidden');
+            adminTag.classList.remove('hidden');
+            userTag.classList.add('hidden');
+        } else {
+            adminTag.classList.add('hidden');
+            userTag.classList.remove('hidden');
         }
+        if(nameDisp) nameDisp.innerText = user.displayName || user.email.split('@')[0];
     } else {
-        if(adminL) adminL.classList.add('hidden');
-        if(userL) userL.classList.add('hidden');
         if(loginT) loginT.classList.remove('hidden');
+        if(dashL) dashL.classList.add('hidden');
+        showLanding();
     }
 });
 
