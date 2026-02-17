@@ -4,104 +4,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VOGUE Archive 2026 - Curated luxury fashion, silk essentials, and timeless elegance.">
+    <meta name="theme-color" content="#000000">
     <title>VOGUE | Archive 2026</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,800;1,400&family=Inter:wght@200;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div id="toast" class="luxury-toast"></div>
+    <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <div class="offer-banner">
-        <p>EXCLUSIVE: 20% OFF ALL SILK PIECES — USE CODE: <strong>VOGUE26</strong></p>
-    </div>
+    <div id="toast" class="luxury-toast" aria-live="polite"></div>
 
-    <nav class="main-nav">
+    <header class="offer-banner" role="banner">
+        <p>EXCLUSIVE: 20% OFF ALL SILK PIECES &mdash; USE CODE: <kbd>VOGUE26</kbd></p>
+    </header>
+
+    <nav class="main-nav" aria-label="Global Navigation">
         <div class="nav-container">
-            <div class="logo" onclick="showLanding()">VOGUE</div>
+            <div class="logo" onclick="showLanding()" role="button" tabindex="0" style="cursor: pointer;" aria-label="Vogue Home">VOGUE</div>
 
             <div class="nav-links">
                 <a href="javascript:void(0)" onclick="showDashboard('essentials')">Essentials</a>
                 <a href="javascript:void(0)" onclick="showDashboard('silk')">Silk</a>
                 <a href="javascript:void(0)" onclick="showDashboard('accessories')">Accessories</a>
                 <a href="javascript:void(0)" onclick="showDashboard('seasonal')">Seasonal</a>
+                <a href="javascript:void(0)" onclick="showDashboard('limited')" style="color: #c5a059;">Limited</a>
             </div>
 
             <div class="nav-actions">
-                <span id="login-trigger" class="nav-text" onclick="toggleAuthModal()">SIGN IN</span>
-                <div id="nav-dashboard-link" class="hidden nav-status-group" onclick="openFullDashboard()">
+                <button id="login-trigger" class="nav-text-btn" onclick="toggleAuthModal()" style="background: none; border: none; cursor: pointer; font-family: inherit; font-size: inherit;">SIGN IN</button>
+                
+                <div id="nav-dashboard-link" class="hidden nav-status-group" onclick="openFullDashboard()" role="button" tabindex="0" style="cursor: pointer;">
                     <span id="nav-user-link" class="nav-status-only">MY ACCOUNT</span>
                     <span id="nav-admin-link" class="hidden nav-status-only">ADMIN PANEL</span>
                 </div>
 
-                <div class="cart-trigger" onclick="toggleCart()">
-                    <i class="fa-solid fa-bag-shopping"></i>
+                <div class="cart-trigger" onclick="toggleCart()" role="button" tabindex="0" aria-label="Open Shopping Bag">
+                    <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
                     <span id="cart-count">0</span>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="content-wrapper">
+    <div class="content-wrapper" id="main-content">
         
-        <div id="landing-page">
-            <section class="hero-luxury">
+        <section id="landing-page">
+            <header class="hero-luxury">
                 <div class="hero-content">
                     <p class="hero-tag">NEW COLLECTION 2026</p>
                     <h1 class="hero-title">Timeless <em>Elegance</em></h1>
                     <button class="btn-explore" onclick="showDashboard('essentials')">SHOP THE ARCHIVE</button>
                 </div>
-            </section>
+            </header>
 
             <section class="shop-container">
                 <div class="shop-header">
-                    <span class="hero-tag" style="color: var(--grey-medium)">CURATED SELECTION</span>
-                    <h2 class="hero-title" style="font-size: 42px; color: var(--black)">Latest Arrivals</h2>
+                    <span class="hero-tag" style="color: #888;">CURATED SELECTION</span>
+                    <h2 class="hero-title" style="font-size: 42px; color: #000;">Latest Arrivals</h2>
                 </div>
                 <div class="arrival-grid">
-                    <div class="ad-card" style="background-image: url('https://i.pinimg.com/736x/bd/4f/39/bd4f3913636c624e94fe0a55001a4432.jpg')">
+                    <article class="ad-card" style="background-image: url('https://i.pinimg.com/736x/bd/4f/39/bd4f3913636c624e94fe0a55001a4432.jpg'); cursor: pointer;" onclick="showDashboard('seasonal')" role="link">
                         <div class="ad-overlay">
                             <h3>The Spring Editorial</h3>
-                            <button class="btn-explore" onclick="showDashboard('seasonal')">VIEW STORY</button>
+                            <button class="btn-explore" type="button">VIEW STORY</button>
                         </div>
-                    </div>
-                    <div class="ad-card" style="background-image: url('https://i.pinimg.com/1200x/67/c1/a5/67c1a500f12921d3cb3db4ba6300c99d.jpg')">
+                    </article>
+                    <article class="ad-card" style="background-image: url('https://i.pinimg.com/1200x/67/c1/a5/67c1a500f12921d3cb3db4ba6300c99d.jpg'); cursor: pointer;" onclick="showDashboard('silk')" role="link">
                         <div class="ad-overlay">
                             <h3>Silk Essentials</h3>
                             <p>Starting at $350</p>
                         </div>
-                    </div>
+                    </article>
                 </div>
             </section>
 
             <section class="newsletter-block">
                 <div class="newsletter-content">
-                    <h2 class="hero-title" style="font-size: 32px; color: var(--black)">The VOGUE Dispatch</h2>
+                    <h2 class="hero-title" style="font-size: 32px; color: #000;">The VOGUE Dispatch</h2>
                     <p>Join our inner circle for early access to the 2026 Archive.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="ENTER YOUR EMAIL">
-                        <button>SUBSCRIBE</button>
-                    </div>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); return false;">
+                        <input type="email" placeholder="ENTER YOUR EMAIL" aria-label="Email for newsletter" required autocomplete="email">
+                        <button type="submit">SUBSCRIBE</button>
+                    </form>
                 </div>
             </section>
-        </div>
+        </section>
 
         <main id="main-app" class="hidden">
             <div class="shop-container">
                 <header class="shop-header">
                     <h2 id="category-title">COLLECTION</h2>
-                    <div class="category-filters">
+                    <nav class="category-filters" aria-label="Product Filters">
                         <button class="filter-btn active" onclick="loadProductsByGroup(currentActiveGroup, 'all')">View All</button>
                         <button class="filter-btn" onclick="loadProductsByGroup(currentActiveGroup, 'women')">Women</button>
                         <button class="filter-btn" onclick="loadProductsByGroup(currentActiveGroup, 'men')">Men</button>
-                    </div>
+                    </nav>
                 </header>
                 <div id="product-grid" class="product-grid"></div>
             </div>
         </main>
 
-        <div id="user-dashboard" class="hidden dashboard-page">
+        <section id="user-dashboard" class="hidden dashboard-page">
             <div class="admin-wrapper">
                 <aside class="admin-sidebar">
                     <div class="admin-user-info">
@@ -113,7 +123,7 @@
                         <button class="user-tab-btn" onclick="switchUserTab('wishlist')"><i class="fa-solid fa-heart"></i> My Wishlist</button>
                         <button class="user-tab-btn" onclick="switchUserTab('details')"><i class="fa-solid fa-user-gear"></i> Account Settings</button>
                         <button class="user-tab-btn" onclick="switchUserTab('feedback')"><i class="fa-solid fa-comment-dots"></i> Support</button>
-                        <button onclick="handleLogout()"><i class="fa-solid fa-power-off"></i> Logout</button>
+                        <button type="button" class="logout-btn" onclick="handleLogout()"><i class="fa-solid fa-power-off"></i> Logout</button>
                     </nav>
                 </aside>
                 <main class="admin-main">
@@ -121,24 +131,23 @@
                         <h1 id="user-tab-title">Your Orders</h1>
                         <button class="btn-ghost-dark" onclick="showDashboard('essentials')">CONTINUE SHOPPING</button>
                     </header>
-                    <div id="user-tab-content" class="inventory-card">
-                        </div>
+                    <div id="user-tab-content" class="inventory-card"></div>
                 </main>
             </div>
-        </div>
+        </section>
 
-        <div id="admin-dashboard" class="hidden">
+        <section id="admin-dashboard" class="hidden">
             <div class="admin-wrapper">
                 <aside class="admin-sidebar">
                     <div class="admin-user-info">
                         <p class="admin-label">ADMINISTRATOR</p>
-                        <h3>HQ CONSOLE</h3>
+                        <h3 id="hq-console-title">HQ CONSOLE</h3>
                     </div>
                     <nav class="admin-nav-menu">
                         <button class="active" onclick="switchAdminTab('inventory')"><i class="fa-solid fa-box"></i> Inventory</button>
                         <button onclick="switchAdminTab('sales')"><i class="fa-solid fa-chart-line"></i> Sales Analytics</button>
                         <button onclick="switchAdminTab('users')"><i class="fa-solid fa-users"></i> User Database</button>
-                        <button onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                        <button type="button" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
                     </nav>
                 </aside>
 
@@ -146,51 +155,67 @@
                     <header class="admin-header">
                         <div>
                             <h1>Inventory Console</h1>
-                            <p>Real-time stock management.</p>
+                            <p>Real-time stock management (Permanent Cloud Sync).</p>
                         </div>
-                        <button class="btn-ghost-dark" onclick="openAddModal()">+ ADD NEW PIECE</button>
+                        <button class="btn-ghost-dark" onclick="openAdminModal()">+ ADD NEW PIECE</button>
                     </header>
 
                     <div class="admin-stats-strip">
-                        <div class="stat-box"><h4>TOTAL STOCK</h4><p>1,240</p></div>
-                        <div class="stat-box"><h4>ACTIVE SKUS</h4><p>48</p></div>
-                        <div class="stat-box"><h4>REVENUE</h4><p>$42.8k</p></div>
+                        <div class="stat-box"><h4>TOTAL STOCK</h4><p id="stat-stock">--</p></div>
+                        <div class="stat-box"><h4>ACTIVE SKUS</h4><p id="stat-skus">--</p></div>
+                        <div class="stat-box"><h4>REVENUE</h4><p id="stat-rev">$0.00</p></div>
                     </div>
 
                     <div class="inventory-card">
-                        <table class="luxury-table">
-                            <thead>
-                                <tr>
-                                    <th>Preview</th>
-                                    <th>Product Name</th>
-                                    <th>Price</th>
-                                    <th style="text-align: right;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventory-body"></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="luxury-table">
+                                <thead>
+                                    <tr>
+                                        <th>Preview</th>
+                                        <th>Product Name</th>
+                                        <th>Price</th>
+                                        <th>Category</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventory-body"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </main>
             </div>
-        </div>
+        </section>
     </div>
 
     <footer class="main-footer">
         <div class="footer-grid">
             <div class="footer-col brand-info">
-                <h2 class="logo">VOGUE</h2>
-                <p>Establishing the global standard of fashion since 1892.</p>
+                <h2 class="logo" onclick="showLanding()" style="margin-bottom: 20px; cursor: pointer;">VOGUE</h2>
+                <p>Establishing the global standard of fashion since 1892. The Archive 2026 collection represents our commitment to luxury and sustainability.</p>
             </div>
-            <div class="footer-col">
+            
+            <nav class="footer-col" aria-label="Collections">
                 <h4>COLLECTIONS</h4>
                 <a href="javascript:void(0)" onclick="showDashboard('essentials')">Essentials</a>
-                <a href="javascript:void(0)" onclick="showDashboard('silk')">Silk</a>
-            </div>
+                <a href="javascript:void(0)" onclick="showDashboard('silk')">Silk Pieces</a>
+                <a href="javascript:void(0)" onclick="showDashboard('accessories')">Accessories</a>
+                <a href="javascript:void(0)" onclick="showDashboard('seasonal')">Seasonal Editorial</a>
+            </nav>
+
+            <nav class="footer-col" aria-label="Information">
+                <h4>INFORMATION</h4>
+                <a href="info.html?section=service">Customer Service</a>
+                <a href="info.html?section=shipping">Shipping & Returns</a>
+                <a href="info.html?section=privacy">Privacy Policy</a>
+                <a href="info.html?section=terms">Terms of Service</a>
+            </nav>
+
             <div class="footer-col">
                 <h4>SOCIAL</h4>
-                <div class="social-icons">
-                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                <div class="social-icons" style="display: flex; gap: 20px; font-size: 20px;">
+                    <a href="https://www.instagram.com/voguemagazine" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@voguemagazine" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="https://twitter.com/voguemagazine" target="_blank" rel="noopener" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
                 </div>
             </div>
         </div>
@@ -199,22 +224,22 @@
         </div>
     </footer>
 
-    <div id="auth-modal" class="modal hidden">
+    <div id="auth-modal" class="modal hidden" aria-modal="true" role="dialog">
         <div class="auth-box">
-            <button class="close-modal" onclick="toggleAuthModal()">✕</button>
+            <button class="close-modal" onclick="toggleAuthModal()" aria-label="Close Modal">&times;</button>
             <div class="auth-tabs">
                 <button id="tab-login" class="active" onclick="switchAuthTab('login')">LOGIN</button>
                 <button id="tab-register" onclick="switchAuthTab('register')">REGISTER</button>
             </div>
             <div id="login-form-container">
-                <input type="email" id="login-email" placeholder="EMAIL ADDRESS">
-                <input type="password" id="login-password" placeholder="PASSWORD">
+                <input type="email" id="login-email" placeholder="EMAIL ADDRESS" autocomplete="email">
+                <input type="password" id="login-password" placeholder="PASSWORD" autocomplete="current-password">
                 <button class="btn-black" onclick="handleEmailLogin()">SIGN IN</button>
             </div>
             <div id="register-form-container" class="hidden">
-                <input type="text" id="reg-name" placeholder="FULL NAME">
-                <input type="email" id="reg-email" placeholder="EMAIL ADDRESS">
-                <input type="password" id="reg-password" placeholder="PASSWORD">
+                <input type="text" id="reg-name" placeholder="FULL NAME" autocomplete="name">
+                <input type="email" id="reg-email" placeholder="EMAIL ADDRESS" autocomplete="email">
+                <input type="password" id="reg-password" placeholder="PASSWORD" autocomplete="new-password">
                 <button class="btn-black" onclick="handleEmailRegister()">CREATE ACCOUNT</button>
             </div>
             <button class="btn-google" onclick="handleGoogleSignIn()">
@@ -223,15 +248,48 @@
         </div>
     </div>
 
-    <div id="product-modal" class="modal hidden">
+    <div id="admin-product-modal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="auth-box" style="max-width: 500px;">
+            <button class="close-modal" onclick="closeAdminModal()">&times;</button>
+            <h2 id="admin-modal-title" class="hero-title" style="font-size: 24px;">ADD PIECE</h2>
+            <div class="admin-form" style="margin-top: 20px;">
+                <input type="hidden" id="admin-p-id">
+                <input type="text" id="admin-p-name" placeholder="PRODUCT NAME">
+                <input type="number" id="admin-p-price" placeholder="PRICE (USD)">
+                <input type="text" id="admin-p-img" placeholder="IMAGE URL">
+                <select id="admin-p-cat" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #eee;">
+                    <option value="essentials">ESSENTIALS</option>
+                    <option value="silk">SILK</option>
+                    <option value="accessories">ACCESSORIES</option>
+                    <option value="seasonal">SEASONAL</option>
+                    <option value="limited">LIMITED EDITION</option>
+                </select>
+                <select id="admin-p-gender" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #eee;">
+                    <option value="women">WOMEN</option>
+                    <option value="men">MEN</option>
+                    <option value="unisex">UNISEX</option>
+                </select>
+                <button class="btn-black" onclick="saveProductToCloud()">CONFIRM ARCHIVE UPDATE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="product-modal" class="modal hidden" aria-modal="true" role="dialog">
         <div class="product-modal-content">
-            <button class="close-modal" onclick="closeProductDetail()">✕</button>
-            <div class="modal-image-side"><img id="detail-img-src" src="" alt="Product"></div>
+            <button class="close-modal" onclick="closeProductDetail()">&times;</button>
+            <div class="modal-image-side">
+                <img id="detail-img-src" src="https://via.placeholder.com/600" alt="Product Detail" loading="lazy">
+            </div>
             <div class="modal-details-side">
-                <h2 id="detail-name" class="hero-title" style="font-size: 28px; margin-bottom: 10px;">PRODUCT NAME</h2>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <h2 id="detail-name" class="hero-title" style="font-size: 28px; margin-bottom: 10px;">PRODUCT NAME</h2>
+                    <button id="wishlist-btn" onclick="toggleWishlist()" aria-label="Add to wishlist" style="background:none; border:none; cursor:pointer; font-size: 22px;">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                </div>
                 <p id="detail-price" style="font-size: 18px; margin-bottom: 30px;">$0.00</p>
                 <div style="margin-bottom: 20px;">
-                    <label style="font-size: 10px; letter-spacing: 2px; display: block; margin-bottom: 10px;">SELECT SIZE</label>
+                    <label for="detail-size" style="font-size: 10px; letter-spacing: 2px; display: block; margin-bottom: 10px;">SELECT SIZE</label>
                     <select id="detail-size" style="width: 100%; padding: 10px; border: 1px solid #eee;"></select>
                 </div>
                 <button class="btn-black" onclick="addCurrentToBag()">ADD TO BAG</button>
@@ -239,17 +297,17 @@
         </div>
     </div>
 
-    <div id="cart-drawer" class="cart-sidebar">
+    <aside id="cart-drawer" class="cart-sidebar" aria-modal="true" role="dialog">
         <div class="cart-header">
             <h3>YOUR BAG</h3>
-            <button class="close-modal" style="position: static;" onclick="toggleCart()">✕</button>
+            <button class="close-modal" style="position: static;" onclick="toggleCart()" aria-label="Close Bag">&times;</button>
         </div>
         <div id="cart-items-list" class="cart-body"></div>
         <div class="cart-footer">
             <div class="total-row"><span>TOTAL</span><span id="cart-total">$0.00</span></div>
-            <button class="btn-black">PROCEED TO CHECKOUT</button>
+            <button class="btn-black" onclick="handleCheckout()">PROCEED TO CHECKOUT</button>
         </div>
-    </div>
+    </aside>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>

@@ -25,10 +25,9 @@ let currentActiveGroup = 'essentials';
 let editingProductId = null;
 
 const ADMIN_EMAIL = "pparu97622@gmail.com";
-const API_URL = "http://localhost:5000/api/products";
 
 /* ==========================================
-   2. THE PRODUCT DATABASE
+   2. THE PRODUCT DATABASE (Initial Archive)
    ========================================== */
 const PRODUCTS = {
     essentials: [
@@ -103,14 +102,15 @@ function showLanding() {
 }
 
 function showDashboard(group) {
-    currentActiveGroup = group;
+    currentActiveGroup = group.toLowerCase().trim();
     document.getElementById('landing-page').classList.add('hidden');
     document.getElementById('admin-dashboard').classList.add('hidden');
     document.getElementById('user-dashboard').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
     
-    document.getElementById('category-title').innerText = group.toUpperCase();
-    loadProductsByGroup(group);
+    const titleEl = document.getElementById('category-title');
+    if(titleEl) titleEl.innerText = group.toUpperCase();
+    loadProductsByGroup(currentActiveGroup);
     window.scrollTo(0, 0);
 }
 
@@ -125,7 +125,7 @@ function openFullDashboard() {
     } else if (auth.currentUser) {
         document.getElementById('admin-dashboard').classList.add('hidden');
         document.getElementById('user-dashboard').classList.remove('hidden');
-        switchUserTab('orders'); // Load default user tab
+        switchUserTab('orders');
     } else {
         toggleAuthModal();
     }
@@ -135,7 +135,7 @@ async function loadProductsByGroup(group, filter = 'all') {
     const grid = document.getElementById('product-grid');
     if (!grid) return;
 
-    // Update Filter UI
+    const cleanGroup = group.trim().toLowerCase();
     const filters = document.querySelectorAll('.filter-btn');
     filters.forEach(btn => {
         btn.classList.remove('active');
@@ -143,88 +143,158 @@ async function loadProductsByGroup(group, filter = 'all') {
     });
 
     grid.innerHTML = '<p class="loading-text">REFINING COLLECTION...</p>';
-    let list = PRODUCTS[group] ? [...PRODUCTS[group]] : [];
-    if (filter !== 'all') list = list.filter(p => p.cat === filter);
 
+    // Logic Fix: Ensure Limited works by checking BOTH price and category tag
+    if (cleanGroup === 'limited') {
+        db.collection('products').onSnapshot(snapshot => {
+            let allItems = [];
+            if (snapshot.empty) {
+                allItems = getFlatProducts();
+            } else {
+                allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
+            let limitedItems = allItems.filter(p => p.price >= 2000 || p.cat === 'limited');
+            if (filter !== 'all') {
+                limitedItems = limitedItems.filter(p => (p.cat_gender || p.cat) === filter);
+            }
+            limitedItems.sort((a, b) => b.price - a.price);
+            renderGrid(limitedItems.slice(0, 6)); 
+        });
+        return;
+    }
+    
+    db.collection('products').where('cat', '==', cleanGroup).onSnapshot(snapshot => {
+        if (snapshot.empty) {
+            let list = PRODUCTS[cleanGroup] || [];
+            if (filter !== 'all') list = list.filter(p => p.cat === filter);
+            renderGrid(list);
+        } else {
+            let list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (filter !== 'all') list = list.filter(p => p.cat_gender === filter);
+            renderGrid(list);
+        }
+    }, (err) => {
+        renderGrid(PRODUCTS[cleanGroup] || []);
+    });
+}
+
+function renderGrid(list) {
+    const grid = document.getElementById('product-grid');
+    if (!grid) return;
+    
     if (list.length === 0) {
         grid.innerHTML = '<p class="empty-msg">NO ITEMS FOUND IN THIS CATEGORY.</p>';
     } else {
-        grid.innerHTML = list.map(p => `
-            <div class="product-card" onclick="openProductDetail('${p.id}')">
-                <div class="img-wrapper">
+        grid.innerHTML = list.map(p => {
+            if (!p || !p.id) return ''; 
+            const isFav = wishlist.some(w => w && w.id === p.id);
+            const isLimited = (currentActiveGroup === 'limited' || p.price >= 2000 || p.cat === 'limited');
+            const badge = isLimited ? `<div style="position: absolute; top: 10px; left: 10px; background: #c5a059; color: white; padding: 4px 10px; font-size: 10px; font-weight: bold; letter-spacing: 1px; z-index: 2; border-radius: 2px;">LIMITED EDITION</div>` : '';
+
+            return `
+            <div class="product-card">
+                <div class="img-wrapper" style="position: relative;" onclick="openProductDetail('${p.id}', '${encodeURIComponent(JSON.stringify(p))}')">
+                    ${badge}
                     <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x500'">
+                    <button class="love-react ${isFav ? 'active' : ''}" 
+                            onclick="event.stopPropagation(); toggleWishlist('${p.id}', '${encodeURIComponent(JSON.stringify(p))}')">
+                        ❤
+                    </button>
                 </div>
-                <h4>${p.name}</h4>
-                <p>$${p.price.toLocaleString()}</p>
-            </div>
-        `).join('');
+                <div onclick="openProductDetail('${p.id}', '${encodeURIComponent(JSON.stringify(p))}')">
+                    <h4>${p.name}</h4>
+                    <p>$${p.price.toLocaleString()}</p>
+                </div>
+            </div>`;
+        }).join('');
     }
 }
 
 /* ==========================================
-   4. USER DASHBOARD FUNCTIONALITY (NEW)
+   4. USER DASHBOARD FUNCTIONALITY
    ========================================== */
-function switchUserTab(tab) {
+async function switchUserTab(tab) {
     const content = document.getElementById('user-tab-content');
     const title = document.getElementById('user-tab-title');
     const btns = document.querySelectorAll('.user-tab-btn');
     
     btns.forEach(b => b.classList.remove('active'));
-    event?.currentTarget?.classList?.add('active');
+    if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('active');
+    }
 
-    content.innerHTML = '<p class="loading-text">LOADING...</p>';
+    if(!content) return;
+    content.innerHTML = '<p class="loading-text">ACCESSING ARCHIVE...</p>';
 
     switch(tab) {
         case 'orders':
             title.innerText = "Order History";
-            content.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa-solid fa-box-open" style="font-size: 30px; margin-bottom: 15px;"></i>
-                    <p>YOU HAVE NO COMPLETED ORDERS YET.</p>
-                    <button class="btn-black" style="width: auto; padding: 10px 20px; margin-top: 15px;" onclick="showDashboard('essentials')">SHOP NOW</button>
-                </div>`;
+            db.collection('orders')
+              .where('userId', '==', auth.currentUser.uid)
+              .onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    content.innerHTML = `<div class="empty-state"><p>YOU HAVE NO COMPLETED ORDERS YET.</p><button class="btn-black" onclick="showDashboard('essentials')">CONTINUE SHOPPING</button></div>`;
+                } else {
+                    content.innerHTML = `
+                        <div class="luxury-table-wrapper">
+                        <table class="luxury-table">
+                            <thead>
+                                <tr><th>ORDER ID</th><th>DATE</th><th>TOTAL</th><th>STATUS</th></tr>
+                            </thead>
+                            <tbody>
+                                ${snapshot.docs.map(doc => {
+                                    const o = doc.data();
+                                    return `<tr>
+                                        <td>#${doc.id.slice(0,8).toUpperCase()}</td>
+                                        <td>${o.timestamp?.toDate().toLocaleDateString() || 'Pending'}</td>
+                                        <td>$${o.total.toLocaleString()}</td>
+                                        <td><span class="status-tag">SHIPPED</span></td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table></div>`;
+                }
+            });
             break;
+
         case 'wishlist':
             title.innerText = "My Wishlist";
             renderWishlist(content);
             break;
+
         case 'details':
             title.innerText = "Account Settings";
             const user = auth.currentUser;
             content.innerHTML = `
-                <div class="settings-form" style="max-width: 400px; text-align: left;">
-                    <label style="font-size: 10px; letter-spacing: 1px;">FULL NAME</label>
-                    <input type="text" id="upd-name" value="${user.displayName || ''}" style="width:100%; padding:10px; margin: 10px 0 20px; border: 1px solid #eee;">
-                    <label style="font-size: 10px; letter-spacing: 1px;">EMAIL</label>
-                    <input type="text" value="${user.email}" disabled style="width:100%; padding:10px; margin: 10px 0 20px; border: 1px solid #f9f9f9; color: #999;">
+                <div style="max-width: 400px; text-align: left;">
+                    <label>MEMBER NAME</label>
+                    <input type="text" id="upd-name" value="${user.displayName || ''}" class="admin-input" style="margin-bottom:20px;">
                     <button class="btn-black" onclick="updateUserProfile()">SAVE CHANGES</button>
                 </div>`;
             break;
+
         case 'feedback':
-            title.innerText = "Support & Feedback";
-            content.innerHTML = `
-                <div class="settings-form" style="max-width: 500px; text-align: left;">
-                    <p style="margin-bottom: 20px; font-size: 13px;">How can we assist you with the 2026 Archive?</p>
-                    <textarea id="fb-msg" placeholder="Describe your issue..." style="width:100%; height: 120px; padding:15px; border:1px solid #eee; font-family:inherit;"></textarea>
-                    <button class="btn-black" style="margin-top: 15px;" onclick="sendFeedback()">SUBMIT MESSAGE</button>
-                </div>`;
+            title.innerText = "Concierge Support";
+            content.innerHTML = `<textarea id="fb-msg" placeholder="How can our concierge assist you today?" class="admin-input" style="height:150px;"></textarea>
+                                 <button class="btn-black" onclick="sendFeedback()">SUBMIT REQUEST</button>`;
             break;
     }
 }
 
 function renderWishlist(container) {
     if (wishlist.length === 0) {
-        container.innerHTML = `<p class="empty-msg">YOUR WISHLIST IS EMPTY.</p>`;
+        container.innerHTML = `<p class="empty-msg">YOUR WISHLIST IS CURRENTLY EMPTY.</p>`;
     } else {
-        container.innerHTML = `<div class="wishlist-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            ${wishlist.map(item => `
-                <div class="cart-item-row" style="border: 1px solid #eee; padding: 10px;">
-                    <img src="${item.img}" class="cart-thumb" style="width: 60px;">
-                    <div class="cart-item-details">
-                        <span class="item-name">${item.name}</span>
-                        <span class="item-price">$${item.price}</span>
+        container.innerHTML = `<div class="product-grid">
+            ${wishlist.map(p => `
+                <div class="product-card">
+                    <div class="img-wrapper">
+                        <img src="${p.img}">
+                        <button class="love-react active" style="position:absolute; top:10px; right:10px;" onclick="toggleWishlist('${p.id}')">❤</button>
                     </div>
-                    <button class="remove-btn" onclick="toggleWishlist('${item.id}')">✕</button>
+                    <h4>${p.name}</h4>
+                    <p>$${p.price.toLocaleString()}</p>
+                    <button class="btn-black" style="width:100%; margin-top:10px;" onclick="openProductDetail('${p.id}', '${encodeURIComponent(JSON.stringify(p))}')">VIEW PIECE</button>
                 </div>
             `).join('')}
         </div>`;
@@ -235,23 +305,27 @@ async function updateUserProfile() {
     const newName = document.getElementById('upd-name').value;
     try {
         await auth.currentUser.updateProfile({ displayName: newName });
-        document.getElementById('user-name-display').innerText = newName;
+        const nameDisp = document.getElementById('user-name-display');
+        if(nameDisp) nameDisp.innerText = newName;
         showToast("PROFILE UPDATED");
     } catch(e) { showToast("UPDATE ERROR"); }
 }
 
 function sendFeedback() {
-    const msg = document.getElementById('fb-msg').value;
-    if(!msg) return;
     showToast("MESSAGE SENT TO CONCIERGE");
     document.getElementById('fb-msg').value = "";
 }
 
 /* ==========================================
-   5. PRODUCT MODAL & WISHLIST LOGIC
+   5. PRODUCT MODAL
    ========================================== */
-async function openProductDetail(id) {
-    selectedProduct = getFlatProducts().find(p => p.id === id);
+async function openProductDetail(id, dataStr = null) {
+    if (dataStr) {
+        selectedProduct = JSON.parse(decodeURIComponent(dataStr));
+    } else {
+        selectedProduct = getFlatProducts().find(p => p.id === id) || wishlist.find(p => p.id === id);
+    }
+    
     if (!selectedProduct) return;
 
     currentDetailQty = 1;
@@ -264,9 +338,14 @@ async function openProductDetail(id) {
     document.getElementById('product-modal').classList.remove('hidden');
 }
 
-function toggleWishlist(id) {
-    const prod = getFlatProducts().find(p => p.id === id);
-    const index = wishlist.findIndex(p => p.id === id);
+function closeProductDetail() { document.getElementById('product-modal').classList.add('hidden'); }
+
+function toggleWishlist(id, dataStr = null) {
+    const prod = dataStr ? JSON.parse(decodeURIComponent(dataStr)) : (getFlatProducts().find(p => p.id === id) || wishlist.find(p => p.id === id));
+    if(!prod) return;
+
+    const index = wishlist.findIndex(p => p && p.id === id);
+    
     if(index > -1) {
         wishlist.splice(index, 1);
         showToast("REMOVED FROM WISHLIST");
@@ -275,13 +354,15 @@ function toggleWishlist(id) {
         showToast("ADDED TO WISHLIST");
     }
     localStorage.setItem('vogue_wishlist', JSON.stringify(wishlist));
-    if(document.getElementById('user-dashboard').offsetParent) switchUserTab('wishlist');
+    
+    if(document.getElementById('user-dashboard').offsetParent) {
+        switchUserTab('wishlist');
+    }
+    loadProductsByGroup(currentActiveGroup);
 }
 
-function closeProductDetail() { document.getElementById('product-modal').classList.add('hidden'); }
-
 /* ==========================================
-   6. CART SYSTEM
+   6. CART & CHECKOUT SYSTEM
    ========================================== */
 function addCurrentToBag() {
     if (!auth.currentUser) { toggleAuthModal(); return; }
@@ -294,6 +375,27 @@ function addCurrentToBag() {
     updateCartUI();
     closeProductDetail();
     showToast(`${selectedProduct.name} ADDED TO BAG`);
+}
+
+async function handleCheckout() {
+    if(!auth.currentUser) return toggleAuthModal();
+    if(cart.length === 0) return showToast("BAG IS EMPTY");
+
+    const orderData = {
+        userId: auth.currentUser.uid,
+        items: cart,
+        total: cart.reduce((sum, i) => sum + (i.price * i.qty), 0),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        await db.collection('orders').add(orderData);
+        cart = [];
+        updateCartUI();
+        toggleCart();
+        showToast("ORDER PLACED SUCCESSFULLY");
+        openFullDashboard();
+    } catch(e) { showToast("CHECKOUT ERROR"); }
 }
 
 function updateCartUI() {
@@ -313,16 +415,14 @@ function renderCartDrawer() {
     } else {
         list.innerHTML = cart.map((item, index) => {
             total += (item.price * item.qty);
-            return `
-                <div class="cart-item-row">
-                    <img src="${item.img}" class="cart-thumb">
-                    <div class="cart-item-details">
-                        <span class="item-name">${item.name}</span>
-                        <span class="item-meta">Size: ${item.size} | Qty: ${item.qty}</span>
-                        <span class="item-price">$${(item.price * item.qty).toLocaleString()}</span>
-                    </div>
-                    <button class="remove-btn" onclick="removeFromCart(${index})">✕</button>
-                </div>`;
+            return `<div class="cart-item-row">
+                        <img src="${item.img}" class="cart-thumb">
+                        <div class="cart-item-details">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-meta">Size: ${item.size} | Qty: ${item.qty}</span>
+                        </div>
+                        <button class="remove-btn" onclick="removeFromCart(${index})">✕</button>
+                    </div>`;
         }).join('');
     }
     const totalEl = document.getElementById('cart-total');
@@ -333,68 +433,72 @@ function removeFromCart(index) { cart.splice(index, 1); updateCartUI(); }
 function toggleCart() { document.getElementById('cart-drawer').classList.toggle('active'); }
 
 /* ==========================================
-   7. ADMIN BACKEND (UPGRADED)
+   7. ADMIN BACKEND
    ========================================== */
 function switchAdminTab(tab) {
     const body = document.getElementById('inventory-body');
     const header = document.querySelector('.admin-header h1');
-    
+    if(!body) return;
+
     if(tab === 'sales') {
         header.innerText = "Sales Analytics";
-        body.innerHTML = '<tr><td colspan="4" style="padding:40px;">NO SALES DATA RECORDED FOR FEB 2026</td></tr>';
+        body.innerHTML = '<tr><td colspan="5" style="padding:40px; text-align:center;">NO SALES DATA RECORDED.</td></tr>';
     } else if (tab === 'users') {
         header.innerText = "User Database";
-        body.innerHTML = '<tr><td colspan="4" style="padding:40px;">LOADING USER RECORDS...</td></tr>';
+        body.innerHTML = '<tr><td colspan="5" style="padding:40px; text-align:center;">FETCHING CLIENT ARCHIVE...</td></tr>';
     } else {
         header.innerText = "Inventory Console";
         syncAdminInventory();
     }
 }
 
-function openAddModal() {
-    editingProductId = null;
-    document.getElementById('admin-modal').classList.remove('hidden');
-}
-
-function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
-
-async function saveProduct() {
-    const name = document.getElementById('admin-p-name').value;
-    const price = parseFloat(document.getElementById('admin-p-price').value);
-    const img = document.getElementById('admin-p-img').value;
-    const group = document.getElementById('admin-p-group').value;
-
-    if (!name || !price || !img) { alert("Missing fields"); return; }
-    const productData = { name, price, image: img, category: group, stock: 10, desc: "New Arrival" };
-
-    try {
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-        });
-        showToast("SAVED TO COLLECTION");
-        closeAdminModal();
-        syncAdminInventory();
-    } catch (e) { showToast("DATABASE ERROR"); }
-}
-
-async function syncAdminInventory() {
+function syncAdminInventory() {
     const body = document.getElementById('inventory-body');
+    const statSkus = document.getElementById('stat-skus');
+    const statStock = document.getElementById('stat-stock'); 
     if (!body) return;
-    try {
-        const response = await fetch(API_URL);
-        const products = await response.json();
-        body.innerHTML = products.map(p => `
-            <tr>
-                <td><img src="${p.image}" width="30"></td>
-                <td>${p.name}</td>
-                <td>$${p.price}</td>
-                <td style="text-align:right;"><button class="remove-btn" onclick="adminDeleteProduct(${p.id})">✕</button></td>
-            </tr>`).join('');
-    } catch (e) { 
-        body.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">OFFLINE MODE: DB NOT CONNECTED</td></tr>';
+
+    db.collection('products').orderBy('updatedAt', 'desc').onSnapshot(snapshot => {
+        if (snapshot.empty) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:60px;">DATABASE EMPTY. <br><br><button class="btn-black" onclick="seedDatabase()">IMPORT INITIAL COLLECTION</button></td></tr>';
+            if(statSkus) statSkus.innerText = "0";
+            if(statStock) statStock.innerText = "0";
+            return;
+        }
+
+        let totalStockVal = 0;
+        body.innerHTML = snapshot.docs.map(doc => {
+            const p = doc.data();
+            totalStockVal += (Number(p.stock) || 0);
+            const dataStr = encodeURIComponent(JSON.stringify(p));
+            return `
+                <tr>
+                    <td><img src="${p.img}" width="30"></td>
+                    <td>${p.name}</td>
+                    <td>$${p.price.toLocaleString()}</td>
+                    <td>${(p.cat || 'Essentials').toUpperCase()}</td>
+                    <td style="text-align:right;">
+                        <button class="filter-btn" style="padding: 2px 8px; font-size: 10px;" onclick="openAdminModal('${doc.id}', '${dataStr}')">EDIT</button>
+                        <button class="remove-btn" onclick="deleteFromCloud('${doc.id}')">✕</button>
+                    </td>
+                </tr>`;
+        }).join('');
+        
+        if(statSkus) statSkus.innerText = snapshot.size;
+        if(statStock) statStock.innerText = totalStockVal;
+    });
+}
+
+async function seedDatabase() {
+    const all = getFlatProducts();
+    for (let p of all) {
+        await db.collection('products').add({
+            ...p,
+            cat_gender: p.cat, 
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
     }
+    showToast("ARCHIVE IMPORTED");
 }
 
 /* ==========================================
@@ -405,17 +509,12 @@ function switchAuthTab(tab) {
     const regForm = document.getElementById('register-form-container');
     const tabL = document.getElementById('tab-login');
     const tabR = document.getElementById('tab-register');
-
     if (tab === 'login') {
-        loginForm.classList.remove('hidden');
-        regForm.classList.add('hidden');
-        tabL.classList.add('active');
-        tabR.classList.remove('active');
+        loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
+        tabL.classList.add('active'); tabR.classList.remove('active');
     } else {
-        loginForm.classList.add('hidden');
-        regForm.classList.remove('hidden');
-        tabL.classList.remove('active');
-        tabR.classList.add('active');
+        loginForm.classList.add('hidden'); regForm.classList.remove('hidden');
+        tabL.classList.remove('active'); tabR.classList.add('active');
     }
 }
 
@@ -468,19 +567,17 @@ auth.onAuthStateChanged(user => {
     if (user) {
         if(loginT) loginT.classList.add('hidden');
         if(dashL) dashL.classList.remove('hidden');
-        
         if (user.email === ADMIN_EMAIL) {
-            adminTag.classList.remove('hidden');
-            userTag.classList.add('hidden');
+            if(adminTag) adminTag.classList.remove('hidden');
+            if(userTag) userTag.classList.add('hidden');
         } else {
-            adminTag.classList.add('hidden');
-            userTag.classList.remove('hidden');
+            if(adminTag) adminTag.classList.add('hidden');
+            if(userTag) userTag.classList.remove('hidden');
         }
         if(nameDisp) nameDisp.innerText = user.displayName || user.email.split('@')[0];
     } else {
         if(loginT) loginT.classList.remove('hidden');
         if(dashL) dashL.classList.add('hidden');
-        showLanding();
     }
 });
 
@@ -492,7 +589,73 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    updateCartUI();
-    loadProductsByGroup('essentials');
-});
+/* ==========================================
+   9. ADMIN CLOUD PRODUCT MANAGEMENT
+   ========================================== */
+function openAdminModal(id = null, dataStr = null) {
+    const modal = document.getElementById('admin-product-modal');
+    modal.classList.remove('hidden');
+    
+    if (id && dataStr) {
+        const data = JSON.parse(decodeURIComponent(dataStr));
+        document.getElementById('admin-modal-title').innerText = "EDIT PIECE";
+        document.getElementById('admin-p-id').value = id;
+        document.getElementById('admin-p-name').value = data.name;
+        document.getElementById('admin-p-price').value = data.price;
+        document.getElementById('admin-p-img').value = data.img;
+        document.getElementById('admin-p-cat').value = data.cat || 'essentials';
+        document.getElementById('admin-p-gender').value = data.cat_gender || 'women';
+    } else {
+        document.getElementById('admin-modal-title').innerText = "ADD NEW PIECE";
+        document.getElementById('admin-p-id').value = "";
+        document.getElementById('admin-p-name').value = "";
+        document.getElementById('admin-p-price').value = "";
+        document.getElementById('admin-p-img').value = "";
+    }
+}
+
+function closeAdminModal() {
+    document.getElementById('admin-product-modal').classList.add('hidden');
+}
+
+async function saveProductToCloud() {
+    const id = document.getElementById('admin-p-id').value;
+    const pName = document.getElementById('admin-p-name').value;
+    const pPrice = document.getElementById('admin-p-price').value;
+    const pImg = document.getElementById('admin-p-img').value;
+
+    if(!pName || !pPrice || !pImg) return showToast("PLEASE FILL ALL FIELDS");
+
+    const productData = {
+        name: pName,
+        price: parseFloat(pPrice),
+        img: pImg,
+        cat: document.getElementById('admin-p-cat').value.trim(),
+        cat_gender: document.getElementById('admin-p-gender').value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        if (id) {
+            await db.collection('products').doc(id).update(productData);
+            showToast("PIECE UPDATED");
+        } else {
+            await db.collection('products').add(productData);
+            showToast("NEW PIECE ADDED");
+        }
+        closeAdminModal();
+    } catch(e) { 
+        showToast("ERROR SAVING PIECE"); 
+    }
+}
+
+async function deleteFromCloud(id) {
+    if(confirm("PERMANENTLY REMOVE THIS PIECE FROM ARCHIVE?")) {
+        try {
+            await db.collection('products').doc(id).delete();
+            showToast("PIECE REMOVED");
+        } catch(e) {
+            showToast("ERROR DELETING");
+        }
+    }
+}
