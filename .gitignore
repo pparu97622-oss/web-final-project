@@ -1,0 +1,14 @@
+# Ignore any folder named venv anywhere in the project
+**/venv/
+**/__pycache__/
+
+# Ignore the specific path
+fashion-store/venv/
+fashion-store/__pycache__/
+
+# Local database
+fashion-store/instance/
+*.db
+
+# Editor settings
+.vscode/
