@@ -7,8 +7,7 @@ app = Flask(__name__, static_folder='.', instance_relative_config=True)
 CORS(app)
 
 # --- VERCEL COMPATIBILITY FIX ---
-# This checks if the app is running on Vercel. 
-# If it is, it uses /tmp (writable). If not, it uses your local instance folder.
+# Detects if running on Vercel to use the writable /tmp directory
 if os.environ.get('VERCEL'):
     db_path = '/tmp/fashion.db'
 else:
@@ -45,7 +44,7 @@ def handle_products():
     products = Product.query.all()
     return jsonify([{"id": p.id, "name": p.name, "price": p.price, "image": p.image, "category": p.category, "desc": p.desc, "stock": p.stock} for p in products])
 
-# This part ensures the database tables are created even on Vercel
+# Ensures the database tables are created automatically on launch
 with app.app_context():
     db.create_all()
 
