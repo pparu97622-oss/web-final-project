@@ -44,6 +44,12 @@ def handle_products():
     products = Product.query.all()
     return jsonify([{"id": p.id, "name": p.name, "price": p.price, "image": p.image, "category": p.category, "desc": p.desc, "stock": p.stock} for p in products])
 
+# --- ADDED: STATIC FILE SUPPORT ---
+# This ensures that files like auth.js and style.css are served to the browser
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('.', path)
+
 # Ensures the database tables are created automatically on launch
 with app.app_context():
     db.create_all()
