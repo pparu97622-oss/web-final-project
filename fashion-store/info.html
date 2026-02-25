@@ -23,6 +23,7 @@
             background: var(--white);
             color: var(--black);
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Luxury Header */
@@ -32,6 +33,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .logo {
@@ -40,7 +45,10 @@
             letter-spacing: 10px;
             text-decoration: none;
             color: var(--black);
+            transition: opacity 0.3s;
         }
+        
+        .logo:hover { opacity: 0.7; }
 
         .back-link {
             font-size: 11px;
@@ -49,6 +57,7 @@
             color: var(--grey-medium);
             text-decoration: none;
             transition: 0.3s;
+            font-weight: 600;
         }
 
         .back-link:hover { color: var(--black); }
@@ -56,7 +65,7 @@
         /* Content Layout */
         .info-container {
             max-width: 1200px;
-            margin: 80px auto;
+            margin: 60px auto 120px;
             padding: 0 4%;
             display: grid;
             grid-template-columns: 250px 1fr;
@@ -67,7 +76,7 @@
         .info-sidebar {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             position: sticky;
             top: 120px;
             height: fit-content;
@@ -77,14 +86,20 @@
             background: none;
             border: none;
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: var(--grey-medium);
             cursor: pointer;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid transparent;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            font-family: var(--sans);
+        }
+
+        .tab-btn:hover {
+            color: var(--black);
+            padding-left: 5px;
         }
 
         .tab-btn.active {
@@ -96,7 +111,7 @@
         /* Content Sections */
         .info-content section {
             display: none;
-            animation: fadeIn 0.5s ease forwards;
+            animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
 
         .info-content section.active {
@@ -105,39 +120,62 @@
 
         h1 {
             font-family: var(--serif);
-            font-size: 42px;
-            margin-bottom: 40px;
-            letter-spacing: 2px;
+            font-size: clamp(32px, 5vw, 42px);
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+            font-weight: 400;
         }
 
         h2 {
             font-family: var(--serif);
-            font-size: 22px;
-            margin: 30px 0 15px;
+            font-size: 20px;
+            margin: 40px 0 15px;
+            font-style: italic;
         }
 
         p {
-            font-size: 14px;
-            color: #444;
-            margin-bottom: 20px;
-            max-width: 800px;
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 25px;
+            max-width: 750px;
         }
 
         .contact-box {
             background: var(--grey-light);
             padding: 40px;
-            margin-top: 40px;
+            margin-top: 50px;
+            border-left: 2px solid var(--black);
         }
 
+        .contact-box p { margin-bottom: 10px; }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @media (max-width: 768px) {
-            .info-container { grid-template-columns: 1fr; }
-            .info-sidebar { position: relative; top: 0; flex-direction: row; overflow-x: auto; padding-bottom: 10px; }
-            .tab-btn { white-space: nowrap; }
+        /* Mobile Optimization */
+        @media (max-width: 900px) {
+            .info-container { 
+                grid-template-columns: 1fr; 
+                margin-top: 40px;
+                gap: 40px;
+            }
+            .info-sidebar { 
+                position: relative; 
+                top: 0; 
+                flex-direction: row; 
+                overflow-x: auto; 
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab-btn { 
+                white-space: nowrap; 
+                padding: 10px 15px;
+            }
+            .tab-btn.active { border-bottom: 2px solid var(--black); }
+            h1 { font-size: 32px; }
         }
     </style>
 </head>
@@ -145,21 +183,21 @@
 
     <nav class="info-nav">
         <a href="index.html" class="logo">VOGUE</a>
-        <a href="index.html" class="back-link">← Back to Shop</a>
+        <a href="index.html" class="back-link">← Return to Boutique</a>
     </nav>
 
     <div class="info-container">
         <aside class="info-sidebar">
-            <button class="tab-btn active" onclick="showTab('service')">Customer Service</button>
-            <button class="tab-btn" onclick="showTab('shipping')">Shipping & Returns</button>
-            <button class="tab-btn" onclick="showTab('privacy')">Privacy Policy</button>
-            <button class="tab-btn" onclick="showTab('terms')">Terms of Service</button>
+            <button class="tab-btn active" data-target="service" onclick="showTab('service')">Customer Service</button>
+            <button class="tab-btn" data-target="shipping" onclick="showTab('shipping')">Shipping & Returns</button>
+            <button class="tab-btn" data-target="privacy" onclick="showTab('privacy')">Privacy Policy</button>
+            <button class="tab-btn" data-target="terms" onclick="showTab('terms')">Terms of Service</button>
         </aside>
 
         <main class="info-content">
             <section id="service" class="active">
                 <h1>Customer Service</h1>
-                <p>Our dedicated concierge team is available to assist you with styling advice, size queries, and order management.</p>
+                <p>Our dedicated concierge team is available to assist you with styling advice, size queries, and order management. We aim to provide a bespoke experience tailored to your needs.</p>
                 <div class="contact-box">
                     <h2>Speak with an Advisor</h2>
                     <p><strong>Email:</strong> concierge@vogue-archive.com</p>
@@ -171,51 +209,74 @@
             <section id="shipping">
                 <h1>Shipping & Returns</h1>
                 <h2>Global Delivery</h2>
-                <p>We provide complimentary express shipping on all orders over $500. Each piece is hand-wrapped in our signature 2026 Archive packaging.</p>
+                <p>We provide complimentary express shipping on all orders over $500. Each piece is hand-wrapped in our signature 2026 Archive packaging to ensure it arrives in pristine condition.</p>
                 <h2>Our Return Policy</h2>
-                <p>Pieces may be returned within 14 days of delivery. Items must be in original condition with all VOGUE tags attached. Silk and intimate pieces are final sale for hygiene reasons.</p>
+                <p>Pieces may be returned within 14 days of delivery. Items must be in original condition with all VOGUE tags attached. Silk and limited edition pieces are final sale for hygiene and exclusivity reasons.</p>
             </section>
 
             <section id="privacy">
                 <h1>Privacy Policy</h1>
                 <p>Your privacy is the cornerstone of our service. We use industry-leading encryption to ensure your data and transaction history remain strictly confidential.</p>
                 <h2>Data Usage</h2>
-                <p>We collect information only to enhance your bespoke shopping experience and provide early access to new collection drops.</p>
+                <p>We collect information only to enhance your bespoke shopping experience, manage your account, and provide early access to new collection drops via our dispatch.</p>
             </section>
 
             <section id="terms">
                 <h1>Terms of Service</h1>
                 <p>By accessing the VOGUE Archive, you agree to our terms of exclusive use. All content, imagery, and designs are the intellectual property of VOGUE.</p>
                 <h2>Purchase Terms</h2>
-                <p>Orders are subject to availability. As many pieces in the 2026 collection are limited edition, we reserve the right to limit quantities per client.</p>
+                <p>Orders are subject to availability. As many pieces in the 2026 collection are handcrafted or limited edition, we reserve the right to limit quantities per client.</p>
             </section>
         </main>
     </div>
 
     <script>
-        // Function to switch tabs
+        /**
+         * Function to switch tabs
+         * @param {string} tabId - The ID of the section to show
+         */
         function showTab(tabId) {
-            // Hide all sections
-            document.querySelectorAll('.info-content section').forEach(sec => sec.classList.remove('active'));
-            // Deactivate all buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // 1. Hide all sections
+            document.querySelectorAll('.info-content section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+
+            // 2. Deactivate all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
             
-            // Show selected
-            document.getElementById(tabId).classList.add('active');
-            // Activate clicked button
-            event.currentTarget.classList.add('active');
+            // 3. Show target section
+            const targetSection = document.getElementById(tabId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // 4. Activate clicked button (handles both click and manual trigger)
+            const targetBtn = document.querySelector(`[data-target="${tabId}"]`);
+            if (targetBtn) targetBtn.classList.add('active');
+
+            // 5. Update URL without refreshing (optional, for UX)
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?section=' + tabId;
+            window.history.pushState({path:newUrl},'',newUrl);
         }
 
-        // Logic to check URL parameters (e.g., info.html?section=shipping)
-        window.onload = () => {
+        /**
+         * Robust Logic to check URL parameters on load
+         */
+        window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const section = urlParams.get('section');
-            if (section) {
-                const targetBtn = Array.from(document.querySelectorAll('.tab-btn'))
-                    .find(btn => btn.innerText.toLowerCase().includes(section.toLowerCase().split(' ')[0]));
-                if (targetBtn) targetBtn.click();
+            const sectionParam = urlParams.get('section');
+            
+            if (sectionParam) {
+                // Map of common keywords to tab IDs
+                const validTabs = ['service', 'shipping', 'privacy', 'terms'];
+                if (validTabs.includes(sectionParam.toLowerCase())) {
+                    showTab(sectionParam.toLowerCase());
+                }
             }
-        }
+        });
     </script>
 </body>
 </html>

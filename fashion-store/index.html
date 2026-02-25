@@ -67,7 +67,7 @@
             <section class="shop-container">
                 <div class="shop-header">
                     <span class="hero-tag" style="color: #888;">CURATED SELECTION</span>
-                    <h2 class="hero-title" style="font-size: 42px; color: #000;">Latest Arrivals</h2>
+                    <h2 class="hero-title" style="color: #000;">Latest Arrivals</h2>
                 </div>
                 <div class="arrival-grid">
                     <article class="ad-card" style="background-image: url('https://i.pinimg.com/736x/bd/4f/39/bd4f3913636c624e94fe0a55001a4432.jpg'); cursor: pointer;" onclick="showDashboard('seasonal')" role="link">
@@ -87,7 +87,7 @@
 
             <section class="newsletter-block">
                 <div class="newsletter-content">
-                    <h2 class="hero-title" style="font-size: 32px; color: #000;">The VOGUE Dispatch</h2>
+                    <h2 class="hero-title" style="color: #000; font-size: clamp(24px, 5vw, 32px);">The VOGUE Dispatch</h2>
                     <p>Join our inner circle for early access to the 2026 Archive.</p>
                     <form class="newsletter-form" onsubmit="event.preventDefault(); return false;">
                         <input type="email" placeholder="ENTER YOUR EMAIL" aria-label="Email for newsletter" required autocomplete="email">
@@ -116,14 +116,14 @@
                 <aside class="admin-sidebar">
                     <div class="admin-user-info">
                         <p class="admin-label">MEMBER SINCE 2026</p>
-                        <h3 id="user-name-display">GUEST USER</h3>
+                        <h3 id="user-name-display" style="padding: 0 30px;">GUEST USER</h3>
                     </div>
                     <nav class="admin-nav-menu">
                         <button class="user-tab-btn active" onclick="switchUserTab('orders')"><i class="fa-solid fa-clock-rotate-left"></i> Order History</button>
                         <button class="user-tab-btn" onclick="switchUserTab('wishlist')"><i class="fa-solid fa-heart"></i> My Wishlist</button>
                         <button class="user-tab-btn" onclick="switchUserTab('details')"><i class="fa-solid fa-user-gear"></i> Account Settings</button>
                         <button class="user-tab-btn" onclick="switchUserTab('feedback')"><i class="fa-solid fa-comment-dots"></i> Support</button>
-                        <button type="button" class="logout-btn" onclick="handleLogout()"><i class="fa-solid fa-power-off"></i> Logout</button>
+                        <button type="button" class="logout-btn" onclick="handleLogout()" style="width: 100%; text-align: left; background: none; border: none; color: #888; padding: 18px 30px; cursor: pointer; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;"><i class="fa-solid fa-power-off"></i> Logout</button>
                     </nav>
                 </aside>
                 <main class="admin-main">
@@ -136,18 +136,18 @@
             </div>
         </section>
 
-        <section id="admin-dashboard" class="hidden">
+        <section id="admin-dashboard" class="hidden dashboard-page">
             <div class="admin-wrapper">
                 <aside class="admin-sidebar">
                     <div class="admin-user-info">
                         <p class="admin-label">ADMINISTRATOR</p>
-                        <h3 id="hq-console-title">HQ CONSOLE</h3>
+                        <h3 id="hq-console-title" style="padding: 0 30px;">HQ CONSOLE</h3>
                     </div>
                     <nav class="admin-nav-menu">
                         <button class="active" onclick="switchAdminTab('inventory')"><i class="fa-solid fa-box"></i> Inventory</button>
                         <button onclick="switchAdminTab('sales')"><i class="fa-solid fa-chart-line"></i> Sales Analytics</button>
                         <button onclick="switchAdminTab('users')"><i class="fa-solid fa-users"></i> User Database</button>
-                        <button type="button" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                        <button type="button" onclick="handleLogout()" style="width: 100%; text-align: left; background: none; border: none; color: #888; padding: 18px 30px; cursor: pointer; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
                     </nav>
                 </aside>
 
@@ -155,7 +155,7 @@
                     <header class="admin-header">
                         <div>
                             <h1>Inventory Console</h1>
-                            <p>Real-time stock management (Permanent Cloud Sync).</p>
+                            <p>Real-time stock management (Cloud Sync).</p>
                         </div>
                         <button class="btn-ghost-dark" onclick="openAdminModal()">+ ADD NEW PIECE</button>
                     </header>
@@ -167,7 +167,7 @@
                     </div>
 
                     <div class="inventory-card">
-                        <div class="table-responsive">
+                        <div class="table-wrapper">
                             <table class="luxury-table">
                                 <thead>
                                     <tr>
@@ -191,7 +191,7 @@
         <div class="footer-grid">
             <div class="footer-col brand-info">
                 <h2 class="logo" onclick="showLanding()" style="margin-bottom: 20px; cursor: pointer;">VOGUE</h2>
-                <p>Establishing the global standard of fashion since 1892. The Archive 2026 collection represents our commitment to luxury and sustainability.</p>
+                <p>Establishing the global standard of fashion since 1892. The Archive 2026 collection represents our commitment to luxury.</p>
             </div>
             
             <nav class="footer-col" aria-label="Collections">
