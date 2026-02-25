@@ -6,11 +6,18 @@ from models import db, Product, User
 app = Flask(__name__, static_folder='.', instance_relative_config=True)
 CORS(app)
 
-# Create instance folder if missing
-if not os.path.exists(app.instance_path):
-    os.makedirs(app.instance_path)
+# --- VERCEL COMPATIBILITY FIX ---
+# This checks if the app is running on Vercel. 
+# If it is, it uses /tmp (writable). If not, it uses your local instance folder.
+if os.environ.get('VERCEL'):
+    db_path = '/tmp/fashion.db'
+else:
+    if not os.path.exists(app.instance_path):
+        os.makedirs(app.instance_path)
+    db_path = os.path.join(app.instance_path, 'fashion.db')
+# --------------------------------
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, 'fashion.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -38,7 +45,9 @@ def handle_products():
     products = Product.query.all()
     return jsonify([{"id": p.id, "name": p.name, "price": p.price, "image": p.image, "category": p.category, "desc": p.desc, "stock": p.stock} for p in products])
 
+# This part ensures the database tables are created even on Vercel
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=5000)
